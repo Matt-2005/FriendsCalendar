@@ -29,9 +29,113 @@
     transform: rotate(25deg);
     transition: transform 0.3s;
 }
-.navbarLeft h1 {
+.navbarLeft .h1nav {
     font-size: 25px;
     font-family: 'SF Pro', sans-serif;
     font-stretch: condensed;
     font-weight: 500;
+}
+.userButton {
+    background: none;
+    cursor: pointer;
+    border: none;
+    font-size: 16px;
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: condensed;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+}
+.userButton:hover {
+    text-decoration: underline;
+}
+.userButton:hover .icon {
+    transform: rotate(90deg);
+    transition: transform 0.3s;
+}
+.icon {
+    height: 20px;
+    width: 20px;
+    margin-left: 5px;
+    border: solid 1px black;
+    border-radius: 50%;
+    rotate: 90deg;
+    transition: transform 0.3s;
+}
+
+
+/* Le panneau (encadré) du menu */
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.06);
+  padding: 8px;
+  z-index: 50;
+}
+
+/* Lien/bouton à l’intérieur du menu */
+.menuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* Hover/focus des éléments du menu */
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: #f5f7fb;
+}
+
+/* Fine séparation optionnelle entre items */
+.menuDivider {
+  height: 1px;
+  background: var(--border, #e5e7eb);
+  margin: 6px 8px;
+}
+
+.navbar { position: relative; z-index: 1000; }        /* la barre passe devant */
+.navbarRight { 
+    position: relative; 
+    overflow: visible; 
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.addBtn {
+    background-image: url('/fonddegrade.jpg');
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+    color: #333333;
+    border: solid 2px white;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: condensed;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.addBtn:hover {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
+    transform: scale(1.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 1100;                                      /* > navbar */
 }

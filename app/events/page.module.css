@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'SF Pro';
+    src: url('/SF-Pro.ttf') format('truetype');
+    font-stretch: condensed;
+    font-style: normal;
+}
+
 .container {
     background-image: url('/fonddegrade.jpg');
     background-size: cover;
@@ -19,6 +26,15 @@
     background-position: right;
     border: solid 2px white;
     border-radius: 23px;
+    padding: 20px 25px;
+    overflow: hidden;
+}
+.containerEvents h2 {
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: ex;
+    font-weight: 500;
+    font-size: 22px;
+    margin-bottom: 12px;
 }
 
 .calendar {
@@ -29,4 +45,60 @@
     background-position: right;
     border: solid 2px white;
     border-radius: 23px;
+}
+
+.eventItem {
+    background-color: white;
+    padding: 10px 15px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.btnJeParticipe {
+    background-color: #4CAF50; /* Vert */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: condensed;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    width: 50%;
+}
+.btnJeParticipe:hover {
+    background-color: #45a049;
+    transition: background-color 0.3s ease;
+}
+
+.btnJeParticipePas {
+    background-color: #f44336; /* Rouge */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: condensed;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    width: 50%;
+}
+.btnJeParticipePas:hover {
+    background-color: #da190b;
+    transition: background-color 0.3s ease;
+}
+
+.avatarsRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.avatarsRow img {
+    height: 35px;
+    width: 35px;
+    border-radius: 50%;
 }

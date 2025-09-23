@@ -44,33 +44,40 @@ export default function Navbar() {
         <nav className={styles.navbar}>
         
             <div className={styles.navbarLeft}>
-                <h1>Les Indécis Agenda</h1>
+                <Link href="/events" className={styles.h1nav}>Les Indécis Agenda</Link>
                 <img src="/logoCalendrier.png" alt="logo calendrier"/>
             </div>
 
             {/* Droite : zone compte */}
             {session?.user ? (
-                <div className={styles.navbarRight}>
-                    <button ref={btnRef} type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-                        <span>
-                            {session.user.name ?? "Mon compte"}
+            <div className={styles.navbarRight}>
+                <Link href="/events/new" className={styles.addBtn}>
+                    Ajouter un évènement
+                </Link>
 
-                        </span>
-                        <span aria-hidden>▾</span>
+                <button className={styles.userButton} ref={btnRef} type="button" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)} >
+                    <span>{session.user.name ?? "Mon compte"}</span>
+                    <img src="/arrow_upward.png" alt="arrow_upward" className={styles.icon} />
+                </button>
+
+                {open && (
+                <div ref={menuRef} role="menu" className={styles.menu}>
+                    <Link href="/account" role="menuitem" className={styles.menuItem}>
+                    Informations personnelles
+                    </Link>
+
+                    <div className={styles.menuDivider} />
+
+                    <button
+                    role="menuitem"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className={styles.menuItem}
+                    >
+                    Logout
                     </button>
-
-                    {open && (
-                        <div ref={menuRef} role="menu">
-                            <Link href="/account" role="menuitem">
-                                Informations personnelles
-                            </Link>
-
-                            <button role="menuitem" onClick={() => signOut({ callbackUrl: "/login" })}>
-                                Logout
-                            </button>
-                        </div>
-                    )}
                 </div>
+                )}
+            </div>
             ) : (
                 <div>
                     <Link href="/login">Login</Link>
