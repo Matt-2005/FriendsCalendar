@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'SF Pro';
+    src: url('/SF-Pro.ttf') format('truetype');
+    font-stretch: condensed;
+    font-style: normal;
+}
+
+
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+    padding: 0 50px;
+}
+
+.navbarLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.navbarLeft:hover img {
+    transform: rotate(0deg);
+    transition: transform 0.3s;
+}
+.navbarLeft img {
+    height: 40px;
+    transform: rotate(25deg);
+    transition: transform 0.3s;
+}
+.navbarLeft h1 {
+    font-size: 25px;
+    font-family: 'SF Pro', sans-serif;
+    font-stretch: condensed;
+    font-weight: 500;
+}

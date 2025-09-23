@@ -1,0 +1,32 @@
+.container {
+    background-image: url('/fonddegrade.jpg');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    padding-left: 50px;
+    padding-right: 50px;
+    margin-top: -60px;
+}
+
+.containerEvents {
+    width: 30%;
+    height: 85%;
+    background-image: url('/fonddegrade.jpg');
+    background-size: cover;
+    background-position: right;
+    border: solid 2px white;
+    border-radius: 23px;
+}
+
+.calendar {
+    width: 70%;
+    height: 85%;
+    background-image: url('/fonddegrade.jpg');
+    background-size: cover;
+    background-position: right;
+    border: solid 2px white;
+    border-radius: 23px;
+}
