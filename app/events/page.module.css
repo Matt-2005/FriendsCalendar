@@ -45,6 +45,7 @@
     background-position: right;
     border: solid 2px white;
     border-radius: 23px;
+    padding: 20px 25px;
 }
 
 .eventItem {
@@ -102,3 +103,4 @@
     width: 35px;
     border-radius: 50%;
 }
+

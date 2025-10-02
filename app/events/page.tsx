@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import styles from "./page.module.css";
 import Link from "next/link";
 import RsvpButtons from "./RsvpButtons"; // 👈 composant client ci-dessous
+import Calendar from "./calendar";
+
 
 function fmt(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -73,7 +75,9 @@ export default async function EventsPage() {
         )}
       </div>
 
-      <div className={styles.calendar}>{/* calendrier plus tard */}</div>
+      <div className={styles.calendar}>
+        <Calendar />
+      </div>
     </div>
   );
 }
