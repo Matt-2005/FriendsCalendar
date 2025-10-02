@@ -41,7 +41,7 @@ export async function GET(
       if (myStatus === "NO") continue;
 
       cal.createEvent({
-        id: `event-${e.id}@lesindecis.fr`, // UID stable
+        id: `event-${e.id}@lesindeciscalendar.fr`, // UID stable
         start: e.date,
         end: new Date(e.date.getTime() + 2 * 60 * 60 * 1000),
         summary: e.title,
@@ -50,7 +50,7 @@ export async function GET(
         status: myStatus === "YES" 
           ? ICalEventStatus.CONFIRMED 
           : ICalEventStatus.TENTATIVE,   // ← au lieu de "CONFIRMED"/"TENTATIVE"
-        url: `https://lesindeciscalendar.vercel.app/events`,
+        url: `https://lesindeciscalendar.fr/events`,
       });
     }
 
