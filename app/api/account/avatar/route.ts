@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+export const runtime = "nodejs";
+
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);

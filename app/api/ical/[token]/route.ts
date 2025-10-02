@@ -5,14 +5,18 @@ export const dynamic = "force-dynamic";  // évite le cache ISR pour un flux viv
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import ical, { ICalEventStatus } from "ical-generator";
+import type { NextRequest } from "next/server";
+
+
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { token: string } }
+    _req: NextRequest,
+  { params }: { params: Promise<{ token: string }> } // 👈 Promise
 ) {
+  const { token } = await params; // 👈 await
   try {
     const user = await prisma.user.findUnique({
-      where: { calendarToken: params.token },
+      where: { calendarToken: token },
       select: { id: true, pseudo: true },
     });
     if (!user) {
