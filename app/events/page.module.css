@@ -104,3 +104,42 @@
     border-radius: 50%;
 }
 
+.eventItem {
+  position: relative;              /* pour positionner le bouton dedans */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 12px 12px 12px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
+/* slot du bouton (pour pouvoir gérer le positionnement fin si besoin) */
+.eventDeleteSlot {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+}
+
+/* style du bouton */
+.evDeleteBtn {
+  width: 35px;
+  height: 35px;
+  border-radius: 50px;
+  border: 1px solid #e5e7eb;
+  background: rgb(255, 0, 0);
+  color: #fff;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.evDeleteBtn:hover { 
+    background: rgb(198, 2, 2);
+    scale: 1.05;
+    transition: background 0.3s ease, scale 0.3s ease;
+}
+.evDeleteBtn:disabled { 
+    opacity: .6; 
+    cursor: default; 
+}

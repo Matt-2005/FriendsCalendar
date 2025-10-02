@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import bcrypt from "bcrypt"; // ou `bcrypt` + @types/bcrypt
+import bcrypt from "bcrypt";
+import { genCalendarToken } from "@/lib/token";
 
 export async function POST(req: Request) {
   try {
@@ -18,21 +19,26 @@ export async function POST(req: Request) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Laisse la BDD arbitrer l’unicité (évite la course)
     await prisma.user.create({
-      data: { email, passwordHash, pseudo },
+      data: {
+        email,
+        passwordHash,
+        pseudo,
+        calendarToken: genCalendarToken(), // ⬅️ depuis lib/token
+      },
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err: unknown) {
-    // Contrainte unique (email)
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      return NextResponse.json({ error: "Email déjà utilisé" }, { status: 409 });
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const target = (err.meta as any)?.target as string[] | undefined;
+      if (target?.includes?.("email")) {
+        return NextResponse.json({ error: "Email déjà utilisé" }, { status: 409 });
+      }
+      if (target?.includes?.("calendarToken")) {
+        return NextResponse.json({ error: "Conflit de token, réessayez" }, { status: 500 });
+      }
     }
-
     console.error("REGISTER_API_ERROR:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }

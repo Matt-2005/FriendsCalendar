@@ -1,10 +1,11 @@
 // app/events/page.tsx — Server Component
 import { prisma } from "@/lib/prisma";
 import styles from "./page.module.css";
-import Link from "next/link";
-import RsvpButtons from "./RsvpButtons"; // 👈 composant client ci-dessous
+import RsvpButtons from "./RsvpButtons";
+import DeleteEventButton from "./DeleteEventButton";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import Calendar from "./calendar";
-
 
 function fmt(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -13,10 +14,13 @@ function fmt(d: Date) {
 }
 
 export default async function EventsPage() {
+  const session = await getServerSession(authOptions);
+  const meId = session?.user?.id ? Number(session.user.id) : null;
+
   const events = await prisma.event.findMany({
     select: {
       id: true, title: true, date: true, location: true, description: true,
-      // ✅ Participants = RSVPs YES
+      creatorId: true,                                   // 👈 pour savoir si je suis le créateur
       rsvps: {
         where: { status: "YES" },
         select: { user: { select: { id: true, pseudo: true, avatarUrl: true } } },
@@ -39,13 +43,19 @@ export default async function EventsPage() {
               const participants = e.rsvps.map(r => r.user);
               return (
                 <li key={e.id} className={styles.eventItem}>
+                  {/* bouton supprimer en haut-gauche, uniquement pour le créateur */}
+                  {meId === e.creatorId && (
+                    <div className={styles.eventDeleteSlot}>
+                      <DeleteEventButton eventId={e.id} />
+                    </div>
+                  )}
+
                   <div className={styles.eventMeta}>
                     {fmt(e.date)}{e.location ? ` · ${e.location}` : ""}
                   </div>
                   <div className={styles.eventTitle}>{e.title}</div>
                   {e.description && <div className={styles.eventDesc}>{e.description}</div>}
 
-                  {/* Avatars participants */}
                   <div className={styles.eventParticipants}>
                     {participants.length === 0 ? (
                       <span className={styles.emptyParticipants}>Personne pour l’instant</span>
@@ -64,7 +74,6 @@ export default async function EventsPage() {
                     )}
                   </div>
 
-                  {/* Boutons RSVP */}
                   <div className={styles.rsvpRow}>
                     <RsvpButtons eventId={e.id} />
                   </div>
@@ -76,7 +85,7 @@ export default async function EventsPage() {
       </div>
 
       <div className={styles.calendar}>
-        <Calendar />
+        <Calendar key={events.length} />
       </div>
     </div>
   );
