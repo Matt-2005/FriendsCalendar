@@ -50,7 +50,7 @@ export async function GET(
         status: myStatus === "YES" 
           ? ICalEventStatus.CONFIRMED 
           : ICalEventStatus.TENTATIVE,   // ← au lieu de "CONFIRMED"/"TENTATIVE"
-        url: `https://ton-domaine.fr/events`,
+        url: `https://lesindeciscalendar.vercel.app/events`,
       });
     }
 
