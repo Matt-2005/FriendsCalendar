@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+export const runtime = "nodejs";
+
 
 export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);

@@ -5,12 +5,21 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@fullcalendar/list": "^6.1.19",
+    "@fullcalendar/react": "^6.1.19",
+    "@fullcalendar/timegrid": "^6.1.19",
     "@prisma/client": "^6.16.2",
     "@prisma/extension-accelerate": "^2.0.2",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.7.0",
+    "ical-generator": "^9.0.0",
     "next": "15.5.3",
     "next-auth": "^4.24.11",
     "react": "19.1.0",
@@ -19,7 +28,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
-    "@types/node": "^20",
+    "@types/node": "^20.19.19",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "prisma": "^6.16.2",

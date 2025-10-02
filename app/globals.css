@@ -29,3 +29,89 @@ input, textarea, select {
 
 label { display: block; margin-bottom: 6px; color: var(--muted); }
 
+/* === FullCalendar — thème "à la Apple" === */
+:root{
+  /* couleurs douces */
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #f7f7f7;
+  --fc-today-bg-color: rgba(0, 122, 255, 0.08);
+  --fc-border-color: #ffffff;
+
+  /* typo */
+  --fc-font-family: -apple-system, BlinkMacSystemFont, "SF Pro", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --fc-small-font-size: 0.86rem;
+
+  /* boutons */
+  --fc-button-text-color: #111;
+  --fc-button-bg-color: #ffffff;
+  --fc-button-border-color: #3D3D3D;
+  --fc-button-hover-bg-color: #f5f5f5;
+  --fc-button-active-bg-color: #ecececa7;
+  --fc-button-active-text-color: #fff;
+
+  /* events par défaut (couleur “pomme”) */
+  --fc-event-bg-color: #0a84ff;
+  --fc-event-border-color: #0a84ff;
+  --fc-event-text-color: #fff;
+}
+
+/* header compact + boutons "pill" */
+.fc .fc-toolbar.fc-header-toolbar{
+  margin: 8px 8px 12px;
+}
+.fc .fc-toolbar-title{
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.fc .fc-button{
+  border-radius: 999px;
+  border-width: 1px;
+  padding: 4px 10px;
+  box-shadow: none;
+}
+.fc .fc-button:focus-visible{
+  outline: 2px solid #0a84ff;
+  outline-offset: 2px;
+}
+
+/* grille plus douce */
+.fc .fc-scrollgrid, .fc .fc-theme-standard td, .fc .fc-theme-standard th{
+  border-color: var(--fc-border-color);
+}
+.fc .fc-col-header-cell-cushion{
+  padding: 6px 0;
+  font-weight: 600;
+  color: #666;
+}
+
+/* cellules plus aérées */
+.fc .fc-daygrid-day-frame{ padding: 6px; }
+
+/* aujourd’hui discret mais visible */
+.fc .fc-day-today .fc-daygrid-day-frame{
+  background: var(--fc-today-bg-color);
+  border-radius: 12px;
+}
+
+/* events en pastilles arrondies, compacts */
+.fc .fc-h-event, .fc .fc-v-event{
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+.fc .fc-daygrid-event{
+  margin: 2px 0;
+}
+
+/* lien "plus" ( +n ) style capsule */
+.fc .fc-daygrid-more-link{
+  border-radius: 999px;
+  background: #f1f1f1;
+  padding: 0 8px;
+}
+
+/* vue liste "carte" */
+.fc .fc-list{
+  border-radius: 14px;
+  overflow: hidden;
+}
+.fc .fc-list-table tr > td{ padding: 10px 12px; }

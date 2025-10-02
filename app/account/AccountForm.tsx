@@ -1,100 +1,93 @@
-// app/account/AccountForm.tsx
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
-type Props = { initial: { email: string; pseudo: string; avatarUrl: string | null } };
-
-export default function AccountForm({ initial }: Props) {
-  const r = useRouter();
-  const [email, setEmail] = useState(initial.email);
-  const [pseudo, setPseudo] = useState(initial.pseudo);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
+export default function AccountForm({
+  initialEmail,
+  initialPseudo,
+  initialAvatarUrl,
+}: {
+  initialEmail: string;
+  initialPseudo: string;
+  initialAvatarUrl: string;
+}) {
+  const [email, setEmail] = useState(initialEmail);
+  const [pseudo, setPseudo] = useState(initialPseudo);
+  const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
-  async function saveProfile(e: React.FormEvent) {
+  async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); setOk(null); setSaving(true);
-    try {
-      const res = await fetch("/api/account", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          pseudo: pseudo.trim(),
-          currentPassword: currentPassword || undefined,
-          newPassword: newPassword || undefined,
-        }),
-      });
+    setMsg(null); setSaving(true);
+    const res = await fetch("/api/account/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, pseudo }),
+    });
+    setSaving(false);
+    if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) setErr(j.error ?? "Erreur serveur");
-      else { setOk("Profil mis à jour"); setCurrentPassword(""); setNewPassword(""); r.refresh(); }
-    } catch { setErr("Erreur réseau"); }
-    finally { setSaving(false); }
+      setMsg(j.error ?? "Erreur de sauvegarde");
+      return;
+    }
+    setMsg("Modifications enregistrées.");
   }
 
-  async function uploadAvatar(e: React.FormEvent) {
-    e.preventDefault();
-    if (!avatarFile) return;
-    setErr(null); setOk(null); setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("avatar", avatarFile);
-      const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files?.[0]) return;
+    setUploading(true); setMsg(null);
+    const fd = new FormData();
+    fd.append("file", e.target.files[0]);
+    const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
+    setUploading(false);
+    if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) setErr(j.error ?? "Erreur upload");
-      else { setOk("Avatar mis à jour"); setAvatarFile(null); r.refresh(); }
-    } catch { setErr("Erreur réseau"); }
-    finally { setUploading(false); }
+      setMsg(j.error ?? "Upload échoué");
+      return;
+    }
+    const j = await res.json();
+    setAvatarUrl(j.url);
+    setMsg("Avatar mis à jour.");
   }
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      {/* Avatar */}
-      <form onSubmit={uploadAvatar} style={{ display: "grid", gap: 8 }}>
-        <label>Photo de profil</label>
+    <section style={{ display: "grid", gap: 12 }}>
+      <h3>Informations personnelles</h3>
+
+      <form onSubmit={onSave} style={{ display: "grid", gap: 10 }}>
+        <label>
+          Pseudo
+          <input value={pseudo} onChange={e => setPseudo(e.target.value)} />
+        </label>
+        <label>
+          Email
+          <input value={email} onChange={e => setEmail(e.target.value)} />
+        </label>
+
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img
-            src={avatarFile ? URL.createObjectURL(avatarFile) : (initial.avatarUrl ?? "/default-avatar.png")}
-            alt="Avatar"
-            style={{ width: 64, height: 64, borderRadius: 999, objectFit: "cover", border: "1px solid #e5e7eb" }}
-          />
-          <input type="file" accept="image/*" onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)} />
-          <button type="submit" disabled={!avatarFile || uploading}>
-            {uploading ? "…" : "Mettre à jour l’avatar"}
-          </button>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="avatar"
+              style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: "1px solid #e5e7eb" }}
+            />
+          ) : (
+            <div style={{ width: 64, height: 64, borderRadius: 12, border: "1px solid #e5e7eb", display: "grid", placeItems: "center" }}>
+              ?
+            </div>
+          )}
+          <label style={{ display: "inline-block" }}>
+            <span style={{ display: "block", marginBottom: 4 }}>Photo de profil</span>
+            <input type="file" accept="image/*" onChange={onUpload} />
+          </label>
         </div>
+
+        <button type="submit" disabled={saving}>{saving ? "…" : "Enregistrer"}</button>
+        {uploading && <div>Upload en cours…</div>}
+        {msg && <div style={{ color: "#0a7" }}>{msg}</div>}
       </form>
-
-      {/* Profil */}
-      <form onSubmit={saveProfile} style={{ display: "grid", gap: 8 }}>
-        <label>Pseudo</label>
-        <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} required />
-
-        <label>Email</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
-
-        <details>
-          <summary>Changer le mot de passe</summary>
-          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-            <input type="password" placeholder="Mot de passe actuel" value={currentPassword} onChange={(e)=>setCurrentPassword(e.target.value)} />
-            <input type="password" placeholder="Nouveau mot de passe (≥ 6)" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} />
-          </div>
-        </details>
-
-        <button type="submit" disabled={saving}>
-          {saving ? "…" : "Enregistrer"}
-        </button>
-      </form>
-
-      {err && <p style={{ color: "crimson" }}>{err}</p>}
-      {ok && <p style={{ color: "seagreen" }}>{ok}</p>}
-    </div>
+    </section>
   );
 }
