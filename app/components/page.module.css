@@ -29,11 +29,12 @@
     transform: rotate(25deg);
     transition: transform 0.3s;
 }
-.navbarLeft .h1nav {
+.navbarLeft .h1navPc {
     font-size: 25px;
     font-family: 'SF Pro', sans-serif;
     font-stretch: condensed;
     font-weight: 500;
+    display: block;
 }
 .userButton {
     background: none;
@@ -138,4 +139,32 @@
   right: 0;
   top: calc(100% + 8px);
   z-index: 1100;                                      /* > navbar */
+}
+
+.navbarRight .h1navMobile {
+    display: none;
+}
+
+@media (max-width: 480px) {
+    .navbarLeft .h1navPc {
+        display: none;
+    }
+    .navbarLeft img {
+        display: none;
+    }
+    .navbarLeft {
+        display: none;
+    }
+    .navbar {
+        padding: 0 25px;
+    }
+    .addBtn {
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
+        color: #333333;
+        border: solid 2px white;
+        padding: 4px 14px;
+        font-size: 12px;
+    }
 }

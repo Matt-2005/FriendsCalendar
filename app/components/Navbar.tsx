@@ -44,7 +44,7 @@ export default function Navbar() {
         <nav className={styles.navbar}>
         
             <div className={styles.navbarLeft}>
-                <Link href="/events" className={styles.h1nav}>Les Indécis Agenda</Link>
+                <Link href="/events" className={styles.h1navPc}>Les Indécis Agenda</Link>
                 <img src="/logoCalendrier.png" alt="logo calendrier"/>
             </div>
 
