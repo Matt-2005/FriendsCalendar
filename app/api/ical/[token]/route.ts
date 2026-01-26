@@ -31,6 +31,7 @@ export async function GET(
     name: "Les Indécis Agenda",
     prodId: { company: "lesindecis", product: "agenda", language: "FR" },
     timezone: "UTC",
+    ttl: 60, // Suggère un rafraîchissement toutes les 60 secondes (1 minute)
   });
 
   for (const e of events) {
@@ -55,7 +56,10 @@ export async function GET(
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": 'inline; filename="les-indecis.ics"',
-      "Cache-Control": "no-store",
+      "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "X-Published-TTL": "PT1M", // Durée de 1 minute (format ISO 8601)
     },
   });
 }
