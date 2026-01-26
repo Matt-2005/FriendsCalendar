@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import styles from "./NotificationManager.module.css";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -21,18 +22,27 @@ export default function NotificationManager() {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    if ("Notification" in window) {
+    // Vérifier le support des notifications
+    const supported = typeof window !== "undefined" && 
+                     "Notification" in window && 
+                     "serviceWorker" in navigator && 
+                     "PushManager" in window;
+    setIsSupported(supported);
+    
+    if (supported) {
       setPermission(Notification.permission);
     }
   }, []);
 
   useEffect(() => {
-    if (session && "serviceWorker" in navigator && "PushManager" in window) {
+    if (session && isSupported) {
       checkSubscription();
     }
-  }, [session]);
+  }, [session, isSupported]);
 
   const checkSubscription = async () => {
     try {
@@ -48,13 +58,15 @@ export default function NotificationManager() {
     if (!session) return;
 
     setLoading(true);
+    setError("");
+    
     try {
       // Demander la permission
       const perm = await Notification.requestPermission();
       setPermission(perm);
 
       if (perm !== "granted") {
-        alert("Vous devez autoriser les notifications pour recevoir des alertes.");
+        setError("Vous devez autoriser les notifications dans votre navigateur.");
         setLoading(false);
         return;
       }
@@ -65,7 +77,14 @@ export default function NotificationManager() {
 
       // Obtenir la clé publique VAPID
       const response = await fetch("/api/notifications/vapid-public-key");
+      if (!response.ok) {
+        throw new Error("Clés VAPID non configurées sur le serveur");
+      }
+      
       const { publicKey } = await response.json();
+      if (!publicKey) {
+        throw new Error("Clé publique VAPID manquante");
+      }
 
       // S'abonner aux notifications push
       const subscription = await registration.pushManager.subscribe({
@@ -82,15 +101,16 @@ export default function NotificationManager() {
         body: JSON.stringify(subscription.toJSON()),
       });
 
-      if (subscribeResponse.ok) {
-        setIsSubscribed(true);
-        alert("✅ Notifications activées avec succès !");
-      } else {
-        throw new Error("Failed to subscribe");
+      if (!subscribeResponse.ok) {
+        const errorData = await subscribeResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || "Erreur lors de l'enregistrement");
       }
-    } catch (error) {
+
+      setIsSubscribed(true);
+      setError("");
+    } catch (error: any) {
       console.error("Error subscribing to notifications:", error);
-      alert("❌ Erreur lors de l'activation des notifications");
+      setError(error.message || "Erreur lors de l'activation des notifications");
     } finally {
       setLoading(false);
     }
@@ -98,6 +118,8 @@ export default function NotificationManager() {
 
   const unsubscribeFromNotifications = async () => {
     setLoading(true);
+    setError("");
+    
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
@@ -118,70 +140,67 @@ export default function NotificationManager() {
         });
 
         setIsSubscribed(false);
-        alert("🔕 Notifications désactivées");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error unsubscribing:", error);
-      alert("❌ Erreur lors de la désactivation");
+      setError("Erreur lors de la désactivation");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!session || !("Notification" in window)) {
+  if (!session) {
     return null;
   }
 
+  if (!isSupported) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.warning}>
+          ⚠️ Les notifications push ne sont pas supportées par votre navigateur.
+        </div>
+        <p className={styles.helpText}>
+          Les notifications push sont disponibles sur Chrome, Firefox, Edge et Safari (iOS 16.4+).
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ marginTop: "20px", padding: "15px", background: "#f8f9fa", borderRadius: "12px" }}>
-      <h3 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "10px" }}>
-        🔔 Notifications Push
-      </h3>
-      <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "15px" }}>
+    <div className={styles.container}>
+      <p className={styles.description}>
         {isSubscribed
-          ? "Vous recevrez des notifications pour les nouveaux événements et les modifications."
-          : "Activez les notifications pour être alerté des nouveaux événements."}
+          ? "✅ Vous recevrez des notifications pour les nouveaux événements et les modifications."
+          : "Activez les notifications pour être alerté instantanément des nouveaux événements."}
       </p>
       
       {permission === "denied" && (
-        <p style={{ color: "#e74c3c", fontSize: "0.85rem", marginBottom: "10px" }}>
-          ⚠️ Les notifications sont bloquées dans votre navigateur. Veuillez les autoriser dans les paramètres.
-        </p>
+        <div className={styles.error}>
+          ⚠️ Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.
+        </div>
+      )}
+
+      {error && (
+        <div className={styles.error}>
+          ❌ {error}
+        </div>
       )}
 
       {!isSubscribed ? (
         <button
           onClick={subscribeToNotifications}
           disabled={loading || permission === "denied"}
-          style={{
-            padding: "10px 20px",
-            background: permission === "denied" ? "#ccc" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontWeight: "600",
-            cursor: permission === "denied" ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
+          className={`${styles.button} ${styles.buttonPrimary} ${(loading || permission === "denied") ? styles.buttonDisabled : ""}`}
         >
-          {loading ? "⏳ Chargement..." : "🔔 Activer les notifications"}
+          {loading ? "⏳ Activation en cours..." : "🔔 Activer les notifications"}
         </button>
       ) : (
         <button
           onClick={unsubscribeFromNotifications}
           disabled={loading}
-          style={{
-            padding: "10px 20px",
-            background: "#e74c3c",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontWeight: "600",
-            cursor: "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
+          className={`${styles.button} ${styles.buttonDanger} ${loading ? styles.buttonDisabled : ""}`}
         >
-          {loading ? "⏳ Chargement..." : "🔕 Désactiver les notifications"}
+          {loading ? "⏳ Désactivation..." : "🔕 Désactiver les notifications"}
         </button>
       )}
     </div>
