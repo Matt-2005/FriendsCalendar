@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import styles from "./account.module.css";
 
 export default function AccountForm({
   initialEmail,
@@ -16,11 +17,14 @@ export default function AccountForm({
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(
+    null
+  );
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null); setSaving(true);
+    setMsg(null);
+    setSaving(true);
     const res = await fetch("/api/account/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -29,65 +33,104 @@ export default function AccountForm({
     setSaving(false);
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setMsg(j.error ?? "Erreur de sauvegarde");
+      setMsg({ type: "error", text: j.error ?? "Erreur de sauvegarde" });
       return;
     }
-    setMsg("Modifications enregistrées.");
+    setMsg({ type: "success", text: "Modifications enregistrées avec succès !" });
   }
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files?.[0]) return;
-    setUploading(true); setMsg(null);
+    setUploading(true);
+    setMsg(null);
     const fd = new FormData();
     fd.append("file", e.target.files[0]);
     const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
     setUploading(false);
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setMsg(j.error ?? "Upload échoué");
+      setMsg({ type: "error", text: j.error ?? "Upload échoué" });
       return;
     }
     const j = await res.json();
     setAvatarUrl(j.url);
-    setMsg("Avatar mis à jour.");
+    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
   }
 
+  const initial = pseudo?.[0]?.toUpperCase() || email?.[0]?.toUpperCase() || "?";
+
   return (
-    <section style={{ display: "grid", gap: 12 }}>
-      <h3>Informations personnelles</h3>
-
-      <form onSubmit={onSave} style={{ display: "grid", gap: 10 }}>
-        <label>
-          Pseudo
-          <input value={pseudo} onChange={e => setPseudo(e.target.value)} />
-        </label>
-        <label>
-          Email
-          <input value={email} onChange={e => setEmail(e.target.value)} />
-        </label>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+    <form onSubmit={onSave} className={styles.form}>
+      <div className={styles.avatarSection}>
+        <div className={styles.avatarPreview}>
           {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="avatar"
-              style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: "1px solid #e5e7eb" }}
-            />
+            <img src={avatarUrl} alt="Avatar" className={styles.avatarImage} />
           ) : (
-            <div style={{ width: 64, height: 64, borderRadius: 12, border: "1px solid #e5e7eb", display: "grid", placeItems: "center" }}>
-              ?
-            </div>
+            <div className={styles.avatarPlaceholder}>{initial}</div>
           )}
-          <label style={{ display: "inline-block" }}>
-            <span style={{ display: "block", marginBottom: 4 }}>Photo de profil</span>
-            <input type="file" accept="image/*" onChange={onUpload} />
-          </label>
         </div>
+        <div className={styles.avatarInfo}>
+          <label className={styles.avatarLabel}>Photo de profil</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={onUpload}
+            className={styles.fileInput}
+            disabled={uploading}
+          />
+          {uploading && (
+            <p className={styles.messageInfo}>
+              <span className={styles.loading}>Upload en cours...</span>
+            </p>
+          )}
+        </div>
+      </div>
 
-        <button type="submit" disabled={saving}>{saving ? "…" : "Enregistrer"}</button>
-        {uploading && <div>Upload en cours…</div>}
-        {msg && <div style={{ color: "#0a7" }}>{msg}</div>}
-      </form>
-    </section>
+      <div className={styles.formGroup}>
+        <label htmlFor="pseudo" className={styles.label}>
+          Pseudo
+        </label>
+        <input
+          id="pseudo"
+          type="text"
+          value={pseudo}
+          onChange={(e) => setPseudo(e.target.value)}
+          className={styles.input}
+          required
+        />
+      </div>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="email" className={styles.label}>
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className={styles.input}
+          required
+        />
+      </div>
+
+      {msg && (
+        <div
+          className={`${styles.message} ${
+            msg.type === "success"
+              ? styles.messageSuccess
+              : msg.type === "error"
+              ? styles.messageError
+              : styles.messageInfo
+          }`}
+        >
+          {msg.text}
+        </div>
+      )}
+
+      <button type="submit" disabled={saving} className={styles.submitButton}>
+        {saving ? "Enregistrement..." : "Enregistrer les modifications"}
+      </button>
+    </form>
   );
 }

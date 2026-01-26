@@ -256,12 +256,20 @@
 /* Tablettes */
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    padding: 20px 15px;
   }
 
   .formCard {
-    padding: 45px 35px;
+    padding: 40px 30px;
     max-width: 500px;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
   }
 
   .gradientOrb1,

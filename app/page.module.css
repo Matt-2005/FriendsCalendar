@@ -233,6 +233,14 @@
   line-height: 1.5;
 }
 
+/* Tablettes et petits desktops */
+@media (max-width: 1024px) {
+  .features {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+  }
+}
+
 /* Tablettes */
 @media (max-width: 768px) {
   .container {
@@ -244,31 +252,35 @@
   }
 
   .title {
-    font-size: clamp(2rem, 10vw, 3rem);
+    font-size: clamp(1.8rem, 9vw, 2.5rem);
     margin-bottom: 15px;
   }
 
   .subtitle {
-    font-size: clamp(0.9rem, 4vw, 1.1rem);
-    margin-bottom: 40px;
+    font-size: clamp(0.85rem, 3.5vw, 1rem);
+    margin-bottom: 35px;
   }
 
   .logoContainer {
     margin-bottom: 20px;
   }
 
+  .logo {
+    width: 70px;
+    height: 70px;
+  }
+
   .buttonGroup {
     flex-direction: column;
     align-items: stretch;
-    margin-bottom: 60px;
-    gap: 15px;
+    margin-bottom: 50px;
+    gap: 12px;
   }
 
   .primaryButton,
   .secondaryButton {
     width: 100%;
-    max-width: 350px;
-    margin: 0 auto;
+    max-width: 100%;
     padding: 14px 30px;
     font-size: 1rem;
   }
@@ -284,7 +296,7 @@
   }
 
   .feature h3 {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
   .feature p {
