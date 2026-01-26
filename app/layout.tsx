@@ -17,12 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Les Indécis Agenda",
   description: "Organisation d'événements entre potes",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#667eea",
 };
 
