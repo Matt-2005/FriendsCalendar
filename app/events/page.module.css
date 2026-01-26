@@ -6,14 +6,20 @@
 }
 
 .pageWrapper {
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -76,6 +82,8 @@
   display: grid;
   grid-template-columns: 1fr 1.5fr;
   gap: 30px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* LEFT PANEL - CALENDAR */
@@ -85,9 +93,8 @@
   border-radius: 25px;
   padding: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  height: fit-content;
-  position: sticky;
-  top: 100px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* RIGHT PANEL - EVENTS LIST */
@@ -97,8 +104,9 @@
   border-radius: 25px;
   padding: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .eventsHeader {
@@ -130,6 +138,27 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 10px;
+}
+
+.eventsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.eventsList::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+.eventsList::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+}
+
+.eventsList::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8a 100%);
 }
 
 /* EMPTY STATE */

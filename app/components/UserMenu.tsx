@@ -124,7 +124,25 @@ export default function UserMenu() {
                 fill="currentColor"
               />
             </svg>
-            Mes événements
+            Tous les événements
+          </Link>
+
+          <Link
+            href="/my-events"
+            className={styles.dropdownItem}
+            onClick={() => setIsOpen(false)}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M10 0C6.13401 0 3 3.13401 3 7V10L1.29289 11.7071C0.902369 12.0976 0.902369 12.7308 1.29289 13.1213C1.68342 13.5118 2.31658 13.5118 2.70711 13.1213L4 11.8284V7C4 3.68629 6.68629 1 10 1C13.3137 1 16 3.68629 16 7V11.8284L17.2929 13.1213C17.6834 13.5118 18.3166 13.5118 18.7071 13.1213C19.0976 12.7308 19.0976 12.0976 18.7071 11.7071L17 10V7C17 3.13401 13.866 0 10 0Z"
+                fill="currentColor"
+              />
+              <path
+                d="M8 16C8 17.1046 8.89543 18 10 18C11.1046 18 12 17.1046 12 16H8Z"
+                fill="currentColor"
+              />
+            </svg>
+            Mes événements créés
           </Link>
 
           <Link
