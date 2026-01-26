@@ -10,7 +10,8 @@ export default function RsvpButtons({ eventId }: { eventId: number }) {
   const [err, setErr] = useState<string | null>(null);
 
   async function send(status: "YES" | "NO") {
-    setErr(null); setLoading(status);
+    setErr(null);
+    setLoading(status);
     try {
       const res = await fetch("/api/rsvp", {
         method: "POST",
@@ -21,7 +22,7 @@ export default function RsvpButtons({ eventId }: { eventId: number }) {
         const j = await res.json().catch(() => ({}));
         setErr(j.error ?? "Erreur serveur");
       } else {
-        r.refresh(); // ♻️ recharge la page serveur pour voir la nouvelle liste
+        r.refresh();
       }
     } catch {
       setErr("Erreur réseau");
@@ -31,14 +32,49 @@ export default function RsvpButtons({ eventId }: { eventId: number }) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 8,  alignItems: "center", justifyContent: "center" }}>
-      <button onClick={() => send("YES")} disabled={loading !== null} className={styles.btnJeParticipe}>
-        {loading === "YES" ? "…" : "Je participe"}
-      </button>
-      <button onClick={() => send("NO")} disabled={loading !== null} className={styles.btnJeParticipePas}>
-        {loading === "NO" ? "…" : "Je ne participe pas"}
-      </button>
-      {err && <span style={{ color: "crimson", fontSize: 12 }}>{err}</span>}
+    <div style={{ display: "flex", gap: 12, flexDirection: "column" }}>
+      <div style={{ display: "flex", gap: 12 }}>
+        <button
+          onClick={() => send("YES")}
+          disabled={loading !== null}
+          className={styles.btnJeParticipe}
+        >
+          {loading === "YES" ? (
+            <span style={{ display: "inline-block", animation: "pulse 1s infinite" }}>
+              ...
+            </span>
+          ) : (
+            <>✓ Je participe</>
+          )}
+        </button>
+        <button
+          onClick={() => send("NO")}
+          disabled={loading !== null}
+          className={styles.btnJeParticipePas}
+        >
+          {loading === "NO" ? (
+            <span style={{ display: "inline-block", animation: "pulse 1s infinite" }}>
+              ...
+            </span>
+          ) : (
+            <>✕ Je ne participe pas</>
+          )}
+        </button>
+      </div>
+      {err && (
+        <div
+          style={{
+            color: "#d32f2f",
+            fontSize: "0.85rem",
+            background: "#ffebee",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            textAlign: "center",
+          }}
+        >
+          {err}
+        </div>
+      )}
     </div>
   );
 }

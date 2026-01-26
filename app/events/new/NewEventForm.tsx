@@ -3,11 +3,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import styles from "./newevent.module.css";
 
 export default function NewEventForm() {
   const r = useRouter();
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState("");           // type="datetime-local"
+  const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -25,7 +26,6 @@ export default function NewEventForm() {
           title: title.trim(),
           description: description.trim(),
           location: location.trim(),
-          // convertit "YYYY-MM-DDTHH:mm" en ISO
           date: new Date(date).toISOString(),
         }),
       });
@@ -43,37 +43,83 @@ export default function NewEventForm() {
   }
 
   const invalid =
-    !title.trim() ||
-    !location.trim() ||
-    !description.trim() ||
-    !date; // laisse le navigateur valider le format
+    !title.trim() || !location.trim() || !description.trim() || !date;
 
   return (
-    <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-      <label>
-        Titre
-        <input value={title} onChange={e=>setTitle(e.target.value)} required />
-      </label>
+    <form onSubmit={onSubmit} className={styles.form}>
+      <div className={styles.formGroup}>
+        <label htmlFor="title" className={styles.label}>
+          Titre de l'événement
+        </label>
+        <input
+          id="title"
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Ex: Soirée cinéma, Barbecue..."
+          className={styles.input}
+          required
+        />
+      </div>
 
-      <label>
-        Date & heure
-        <input type="datetime-local" value={date} onChange={e=>setDate(e.target.value)} required />
-      </label>
+      <div className={styles.formGroup}>
+        <label htmlFor="date" className={styles.label}>
+          Date et heure
+        </label>
+        <input
+          id="date"
+          type="datetime-local"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className={styles.input}
+          required
+        />
+      </div>
 
-      <label>
-        Lieu
-        <input value={location} onChange={e=>setLocation(e.target.value)} required />
-      </label>
+      <div className={styles.formGroup}>
+        <label htmlFor="location" className={styles.label}>
+          Lieu
+        </label>
+        <input
+          id="location"
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Ex: Chez moi, Parc de la ville..."
+          className={styles.input}
+          required
+        />
+      </div>
 
-      <label>
-        Description
-        <textarea rows={4} value={description} onChange={e=>setDescription(e.target.value)} required />
-      </label>
+      <div className={styles.formGroup}>
+        <label htmlFor="description" className={styles.label}>
+          Description
+        </label>
+        <textarea
+          id="description"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Décrivez votre événement..."
+          className={styles.textarea}
+          required
+        />
+      </div>
 
-      <button type="submit" disabled={loading || invalid}>
-        {loading ? "…" : "Créer l’évènement"}
+      {err && (
+        <div className={styles.error}>
+          <span>⚠️</span>
+          {err}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading || invalid}
+        className={styles.submitButton}
+      >
+        {loading ? "Création en cours..." : "Créer l'événement"}
       </button>
-      {err && <p style={{ color: "crimson" }}>{err}</p>}
     </form>
   );
 }
