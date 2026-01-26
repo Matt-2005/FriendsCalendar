@@ -35,14 +35,20 @@ export default async function EventsPage() {
   });
 
   // Récupérer toutes les disponibilités pour afficher dans le calendrier
-  const availabilities = await prisma.availability.findMany({
-    include: {
-      user: {
-        select: { id: true, pseudo: true, avatarUrl: true },
+  let availabilities: any[] = [];
+  try {
+    availabilities = await prisma.availability.findMany({
+      include: {
+        user: {
+          select: { id: true, pseudo: true, avatarUrl: true },
+        },
       },
-    },
-    orderBy: { startDate: "asc" },
-  });
+      orderBy: { startDate: "asc" },
+    });
+  } catch (error) {
+    // La table Availability n'existe pas encore (migration non exécutée)
+    console.log("Availability table not found, skipping availabilities");
+  }
 
   return (
     <div className={styles.pageWrapper}>

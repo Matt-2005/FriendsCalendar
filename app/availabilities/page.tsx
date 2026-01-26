@@ -16,14 +16,20 @@ export default async function AvailabilitiesPage() {
   const userId = Number(session.user.id);
 
   // Récupérer toutes les disponibilités
-  const availabilities = await prisma.availability.findMany({
-    include: {
-      user: {
-        select: { id: true, pseudo: true, avatarUrl: true },
+  let availabilities: any[] = [];
+  try {
+    availabilities = await prisma.availability.findMany({
+      include: {
+        user: {
+          select: { id: true, pseudo: true, avatarUrl: true },
+        },
       },
-    },
-    orderBy: { startDate: "asc" },
-  });
+      orderBy: { startDate: "asc" },
+    });
+  } catch (error) {
+    // La table Availability n'existe pas encore
+    console.log("Availability table not found");
+  }
 
   const myAvailabilities = availabilities.filter((a) => a.userId === userId);
   const othersAvailabilities = availabilities.filter((a) => a.userId !== userId);
