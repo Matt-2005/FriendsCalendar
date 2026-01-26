@@ -24,8 +24,10 @@ export default async function EventsPage() {
       id: true, title: true, date: true, location: true, description: true,
       creatorId: true,
       rsvps: {
-        where: { status: "YES" },
-        select: { user: { select: { id: true, pseudo: true, avatarUrl: true } } },
+        select: { 
+          status: true,
+          user: { select: { id: true, pseudo: true, avatarUrl: true } }
+        },
       },
     },
     orderBy: { date: "asc" },
@@ -76,7 +78,11 @@ export default async function EventsPage() {
                 </div>
               ) : (
                 events.map((e) => {
-                  const participants = e.rsvps.map(r => r.user);
+                  const yesRsvps = e.rsvps.filter(r => r.status === "YES");
+                  const noRsvps = e.rsvps.filter(r => r.status === "NO");
+                  const participants = yesRsvps.map(r => r.user);
+                  const notParticipating = noRsvps.map(r => r.user);
+                  
                   return (
                     <div key={e.id} className={styles.eventCard}>
                       {meId === e.creatorId && (
@@ -114,9 +120,10 @@ export default async function EventsPage() {
                         <p className={styles.eventDesc}>{e.description}</p>
                       )}
 
+                      {/* Participants YES */}
                       <div className={styles.eventParticipants}>
                         <div className={styles.participantsLabel}>
-                          Participants ({participants.length})
+                          ✓ Participants ({participants.length})
                         </div>
                         {participants.length === 0 ? (
                           <span className={styles.emptyParticipants}>
@@ -152,6 +159,42 @@ export default async function EventsPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* Participants NO */}
+                      {notParticipating.length > 0 && (
+                        <div className={styles.eventParticipants}>
+                          <div className={styles.notParticipantsLabel}>
+                            ✗ Ne participent pas ({notParticipating.length})
+                          </div>
+                          <div className={styles.avatarsRow}>
+                            {notParticipating.slice(0, 5).map((u) => (
+                              <div
+                                key={u.id}
+                                className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}
+                                title={u.pseudo ?? ""}
+                              >
+                                {u.avatarUrl ? (
+                                  <img
+                                    src={u.avatarUrl}
+                                    alt={u.pseudo ?? "avatar"}
+                                  />
+                                ) : (
+                                  <span className={styles.avatarPlaceholder}>
+                                    {u.pseudo?.[0]?.toUpperCase() ?? "?"}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                            {notParticipating.length > 5 && (
+                              <div className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}>
+                                <span className={styles.avatarPlaceholder}>
+                                  +{notParticipating.length - 5}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       <div className={styles.eventActions}>
                         <RsvpButtons eventId={e.id} />
