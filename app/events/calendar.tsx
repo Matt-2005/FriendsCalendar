@@ -12,11 +12,27 @@ interface Event {
   description: string | null;
 }
 
-interface CalendarProps {
-  events: Event[];
+interface User {
+  id: number;
+  pseudo: string;
+  avatarUrl: string | null;
 }
 
-export default function Calendar({ events }: CalendarProps) {
+interface Availability {
+  id: number;
+  startDate: Date;
+  endDate: Date;
+  type: "AVAILABLE" | "VACATION" | "BUSY";
+  note: string | null;
+  user: User;
+}
+
+interface CalendarProps {
+  events: Event[];
+  availabilities: Availability[];
+}
+
+export default function Calendar({ events, availabilities }: CalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const monthNames = [
@@ -71,6 +87,18 @@ export default function Calendar({ events }: CalendarProps) {
     });
   };
 
+  const getAvailabilitiesForDay = (day: number) => {
+    const currentDayDate = new Date(year, month, day);
+    return availabilities.filter((avail) => {
+      const start = new Date(avail.startDate);
+      const end = new Date(avail.endDate);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      currentDayDate.setHours(12, 0, 0, 0);
+      return currentDayDate >= start && currentDayDate <= end;
+    });
+  };
+
   const days = [];
   for (let i = 0; i < startingDayOfWeek; i++) {
     days.push(<div key={`empty-${i}`} className={styles.calendarDay}></div>);
@@ -78,14 +106,48 @@ export default function Calendar({ events }: CalendarProps) {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEvents = getEventsForDay(day);
+    const dayAvailabilities = getAvailabilitiesForDay(day);
+    
+    const availableCount = dayAvailabilities.filter(a => a.type === "AVAILABLE").length;
+    const vacationCount = dayAvailabilities.filter(a => a.type === "VACATION").length;
+    const busyCount = dayAvailabilities.filter(a => a.type === "BUSY").length;
+    
     days.push(
       <div
         key={day}
         className={`${styles.calendarDay} ${
           isToday(day) ? styles.today : ""
-        } ${hasEvent(day) ? styles.hasEvent : ""}`}
+        } ${hasEvent(day) ? styles.hasEvent : ""} ${
+          dayAvailabilities.length > 0 ? styles.hasAvailabilities : ""
+        }`}
+        title={
+          dayAvailabilities.length > 0
+            ? `${availableCount} disponible(s), ${vacationCount} en vacances, ${busyCount} occupé(s)`
+            : ""
+        }
       >
         <span className={styles.dayNumber}>{day}</span>
+        
+        {dayAvailabilities.length > 0 && (
+          <div className={styles.availabilityIndicators}>
+            {availableCount > 0 && (
+              <span className={styles.availIndicator} style={{ background: "#4caf50" }}>
+                {availableCount}
+              </span>
+            )}
+            {vacationCount > 0 && (
+              <span className={styles.availIndicator} style={{ background: "#ff9800" }}>
+                ✈️
+              </span>
+            )}
+            {busyCount > 0 && (
+              <span className={styles.availIndicator} style={{ background: "#f44336" }}>
+                {busyCount}
+              </span>
+            )}
+          </div>
+        )}
+        
         {dayEvents.length > 0 && (
           <div className={styles.eventDots}>
             {dayEvents.slice(0, 3).map((event, idx) => (
@@ -133,6 +195,24 @@ export default function Calendar({ events }: CalendarProps) {
         <div className={styles.legendItem}>
           <div className={styles.legendToday}></div>
           <span>Aujourd'hui</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.availIndicator} style={{ background: "#4caf50" }}>
+            #
+          </span>
+          <span>Disponibles</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.availIndicator} style={{ background: "#ff9800" }}>
+            ✈️
+          </span>
+          <span>Vacances</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.availIndicator} style={{ background: "#f44336" }}>
+            #
+          </span>
+          <span>Occupés</span>
         </div>
       </div>
     </div>

@@ -146,6 +146,21 @@ export default function UserMenu() {
           </Link>
 
           <Link
+            href="/availabilities"
+            className={styles.dropdownItem}
+            onClick={() => setIsOpen(false)}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path
+                d="M10 2C9.44772 2 9 2.44772 9 3V9H3C2.44772 9 2 9.44772 2 10C2 10.5523 2.44772 11 3 11H9V17C9 17.5523 9.44772 18 10 18C10.5523 18 11 17.5523 11 17V11H17C17.5523 11 18 10.5523 18 10C18 9.44772 17.5523 9 17 9H11V3C11 2.44772 10.5523 2 10 2Z"
+                fill="currentColor"
+              />
+              <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2" fill="none"/>
+            </svg>
+            Disponibilités
+          </Link>
+
+          <Link
             href="/events/new"
             className={styles.dropdownItem}
             onClick={() => setIsOpen(false)}

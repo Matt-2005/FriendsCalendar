@@ -34,6 +34,16 @@ export default async function EventsPage() {
     take: 100,
   });
 
+  // Récupérer toutes les disponibilités pour afficher dans le calendrier
+  const availabilities = await prisma.availability.findMany({
+    include: {
+      user: {
+        select: { id: true, pseudo: true, avatarUrl: true },
+      },
+    },
+    orderBy: { startDate: "asc" },
+  });
+
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.container}>
@@ -55,7 +65,7 @@ export default async function EventsPage() {
 
         <div className={styles.mainContent}>
           <div className={styles.leftPanel}>
-            <Calendar events={events} />
+            <Calendar events={events} availabilities={availabilities} />
           </div>
 
           <div className={styles.rightPanel}>
