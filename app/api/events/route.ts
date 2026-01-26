@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { notifyEventCreated } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -22,9 +23,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Entrées invalides" }, { status: 400 });
   }
 
-  await prisma.event.create({
+  const newEvent = await prisma.event.create({
     data: { title, description, location, date, creatorId: userId },
   });
+
+  // Envoyer les notifications push
+  notifyEventCreated(newEvent.id, userId).catch((err) =>
+    console.error("Error sending notifications:", err)
+  );
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
