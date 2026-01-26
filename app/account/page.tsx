@@ -53,37 +53,100 @@ export default async function AccountPage() {
           <div className={styles.card}>
             <h2 className={styles.cardTitle}>Abonnement au calendrier</h2>
             <p className={styles.cardSubtitle}>
-              Synchronisez vos événements avec votre application de calendrier préférée
+              Tous les événements apparaissent automatiquement dans votre calendrier. Seuls les événements que vous refusez sont exclus.
             </p>
 
             <div className={styles.calendarSection}>
-              <div className={styles.calendarInfo}>
-                <div className={styles.calendarIcon}>🍎</div>
-                <div className={styles.calendarText}>
-                  <h4>Apple Calendar & Outlook</h4>
-                  <p>Cliquez sur le lien pour vous abonner automatiquement</p>
-                  <a href={webcalUrl} className={styles.calendarUrl}>
-                    {webcalUrl}
-                  </a>
+              <div className={styles.subscribeButtons}>
+                <a
+                  href={webcalUrl}
+                  className={styles.subscribeBtn}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className={styles.subscribeBtnIcon}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div className={styles.subscribeBtnContent}>
+                    <div className={styles.subscribeBtnTitle}>
+                      Apple Calendar / Outlook
+                    </div>
+                    <div className={styles.subscribeBtnDesc}>
+                      Cliquez pour vous abonner instantanément
+                    </div>
+                  </div>
+                  <div className={styles.subscribeBtnArrow}>→</div>
+                </a>
+
+                <a
+                  href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`}
+                  className={styles.subscribeBtn}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <div className={styles.subscribeBtnIcon}>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" fill="currentColor"/>
+                    </svg>
+                  </div>
+                  <div className={styles.subscribeBtnContent}>
+                    <div className={styles.subscribeBtnTitle}>
+                      Google Calendar
+                    </div>
+                    <div className={styles.subscribeBtnDesc}>
+                      S'abonner en un clic
+                    </div>
+                  </div>
+                  <div className={styles.subscribeBtnArrow}>→</div>
+                </a>
+              </div>
+
+              <div className={styles.calendarFeatures}>
+                <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>✓</span>
+                  <span>Synchronisation automatique</span>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>✓</span>
+                  <span>Tous les événements (sauf refus)</span>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>✓</span>
+                  <span>Mise à jour en temps réel</span>
                 </div>
               </div>
 
-              <div className={styles.calendarInfo}>
-                <div className={styles.calendarIcon}>📅</div>
-                <div className={styles.calendarText}>
-                  <h4>Google Calendar</h4>
-                  <p>
-                    Allez dans "Autres agendas" → "S'abonner à un agenda" → Collez l'URL ci-dessous
-                  </p>
-                  <code className={styles.calendarUrl}>{httpsUrl}</code>
-                </div>
-              </div>
+              <details className={styles.advancedOptions}>
+                <summary className={styles.advancedSummary}>
+                  Options avancées
+                </summary>
+                <div className={styles.advancedContent}>
+                  <div className={styles.urlSection}>
+                    <label className={styles.urlLabel}>URL du calendrier (iCal)</label>
+                    <div className={styles.urlBox}>
+                      <code className={styles.urlCode}>{httpsUrl}</code>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(httpsUrl);
+                          alert("URL copiée !");
+                        }}
+                        className={styles.copyButton}
+                      >
+                        📋 Copier
+                      </button>
+                    </div>
+                  </div>
 
-              <form action="/api/account/regenerate-calendar-token" method="post">
-                <button type="submit" className={styles.regenerateButton}>
-                  🔄 Régénérer le lien (invalide l'ancien)
-                </button>
-              </form>
+                  <form action="/api/account/regenerate-calendar-token" method="post">
+                    <button type="submit" className={styles.regenerateButton}>
+                      🔄 Régénérer le lien (invalide l'ancien)
+                    </button>
+                  </form>
+                </div>
+              </details>
             </div>
           </div>
         </div>

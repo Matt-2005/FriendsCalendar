@@ -34,9 +34,11 @@ export async function GET(
   });
 
   for (const e of events) {
-    const my = e.rsvps[0]?.status ?? null; // null = en attente
+    const my = e.rsvps[0]?.status ?? null; // null = sans réponse
+    // Exclure uniquement les événements refusés
     if (my === "NO") continue;
 
+    // Tous les autres événements (YES ou sans réponse) sont confirmés
     cal.createEvent({
       id: `event-${e.id}@lesindecis.fr`,
       start: e.date,
@@ -44,7 +46,7 @@ export async function GET(
       summary: e.title,
       description: e.description ?? "",
       location: e.location ?? "",
-      status: my === "YES" ? ICalEventStatus.CONFIRMED : ICalEventStatus.TENTATIVE,
+      status: ICalEventStatus.CONFIRMED,
       url: "https://lesindeciscalendar.fr/events",
     });
   }
