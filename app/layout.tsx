@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/Navbar";
+import ConditionalNavbar from "./components/ConditionalNavbar";
 import SessionProviderWrapper from "./providers/SessionProviderWrapper";
 
 const geistSans = Geist({
@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Les Indécis Agenda",
   description: "Organisation d'événements entre potes",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: "#667eea",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProviderWrapper>
-          <Navbar />
+          <ConditionalNavbar />
           {children}
         </SessionProviderWrapper>
       </body>
