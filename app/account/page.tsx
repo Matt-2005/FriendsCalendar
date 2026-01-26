@@ -6,7 +6,6 @@ import AccountForm from "./AccountForm";
 import Link from "next/link";
 import UserMenu from "../components/UserMenu";
 import CopyButton from "./CopyButton";
-import NotificationManager from "../components/NotificationManager";
 import styles from "./account.module.css";
 
 export default async function AccountPage() {
@@ -141,14 +140,6 @@ export default async function AccountPage() {
                 </div>
               </details>
             </div>
-          </div>
-
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Notifications</h2>
-            <p className={styles.cardSubtitle}>
-              Recevez des alertes instantanées pour les nouveaux événements et les modifications
-            </p>
-            <NotificationManager />
           </div>
         </div>
       </div>

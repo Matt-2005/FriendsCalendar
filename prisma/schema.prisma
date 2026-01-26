@@ -29,7 +29,6 @@ model User {
   events Event[] @relation("UserEvents")
   rsvps Rsvp[]
   calendarToken String @unique
-  pushSubscriptions PushSubscription[]
 }
 
 model Event {
@@ -57,18 +56,4 @@ model Rsvp {
 
   @@id([userID, eventID])
   @@index([eventID, status])
-}
-
-model PushSubscription {
-  id Int @id @default(autoincrement())
-  userId Int
-  endpoint String
-  p256dh String
-  auth String
-  createdAt DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, endpoint])
-  @@index([userId])
 }
