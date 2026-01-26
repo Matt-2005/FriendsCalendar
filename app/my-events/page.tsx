@@ -43,8 +43,10 @@ export default async function MyEventsPage() {
       description: true,
       creatorId: true,
       rsvps: {
-        where: { status: "YES" },
-        select: { user: { select: { id: true, pseudo: true, avatarUrl: true } } },
+        select: { 
+          status: true,
+          user: { select: { id: true, pseudo: true, avatarUrl: true } }
+        },
       },
     },
     orderBy: { date: "asc" },
@@ -87,7 +89,10 @@ export default async function MyEventsPage() {
           ) : (
             <div className={styles.eventsGrid}>
               {myEvents.map((e) => {
-                const participants = e.rsvps.map((r) => r.user);
+                const yesRsvps = e.rsvps.filter(r => r.status === "YES");
+                const noRsvps = e.rsvps.filter(r => r.status === "NO");
+                const participants = yesRsvps.map((r) => r.user);
+                const notParticipating = noRsvps.map((r) => r.user);
                 const eventDate = new Date(e.date);
                 const isPast = eventDate < new Date();
 
@@ -149,7 +154,7 @@ export default async function MyEventsPage() {
                     <div className={styles.eventParticipants}>
                       <div className={styles.participantsHeader}>
                         <span className={styles.participantsLabel}>
-                          Participants
+                          ✓ Participants
                         </span>
                         <span className={styles.participantsCount}>
                           {participants.length}
@@ -189,6 +194,46 @@ export default async function MyEventsPage() {
                         </div>
                       )}
                     </div>
+
+                    {notParticipating.length > 0 && (
+                      <div className={styles.eventParticipants}>
+                        <div className={styles.participantsHeader}>
+                          <span className={styles.notParticipantsLabel}>
+                            ✗ Ne participent pas
+                          </span>
+                          <span className={styles.participantsCount}>
+                            {notParticipating.length}
+                          </span>
+                        </div>
+                        <div className={styles.avatarsRow}>
+                          {notParticipating.slice(0, 8).map((u) => (
+                            <div
+                              key={u.id}
+                              className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}
+                              title={u.pseudo ?? ""}
+                            >
+                              {u.avatarUrl ? (
+                                <img
+                                  src={u.avatarUrl}
+                                  alt={u.pseudo ?? "avatar"}
+                                />
+                              ) : (
+                                <span className={styles.avatarPlaceholder}>
+                                  {u.pseudo?.[0]?.toUpperCase() ?? "?"}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {notParticipating.length > 8 && (
+                            <div className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}>
+                              <span className={styles.avatarPlaceholder}>
+                                +{notParticipating.length - 8}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className={styles.eventFooter}>
                       <div className={styles.eventDateFull}>

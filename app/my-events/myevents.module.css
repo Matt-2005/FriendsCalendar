@@ -287,6 +287,14 @@
   letter-spacing: 0.5px;
 }
 
+.notParticipantsLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e74c3c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .participantsCount {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -339,6 +347,19 @@
   color: white;
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+.notParticipatingAvatar {
+  opacity: 0.6;
+  border-color: #ffcdd2 !important;
+}
+
+.notParticipatingAvatar .avatarPlaceholder {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.notParticipatingAvatar:hover {
+  opacity: 0.8;
 }
 
 .eventFooter {

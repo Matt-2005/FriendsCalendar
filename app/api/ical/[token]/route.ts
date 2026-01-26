@@ -31,12 +31,15 @@ export async function GET(
     name: "Les Indécis Agenda",
     prodId: { company: "lesindecis", product: "agenda", language: "FR" },
     timezone: "UTC",
+    ttl: 60, // Suggère un rafraîchissement toutes les 60 secondes (1 minute)
   });
 
   for (const e of events) {
-    const my = e.rsvps[0]?.status ?? null; // null = en attente
+    const my = e.rsvps[0]?.status ?? null; // null = sans réponse
+    // Exclure uniquement les événements refusés
     if (my === "NO") continue;
 
+    // Tous les autres événements (YES ou sans réponse) sont confirmés
     cal.createEvent({
       id: `event-${e.id}@lesindecis.fr`,
       start: e.date,
@@ -44,7 +47,7 @@ export async function GET(
       summary: e.title,
       description: e.description ?? "",
       location: e.location ?? "",
-      status: my === "YES" ? ICalEventStatus.CONFIRMED : ICalEventStatus.TENTATIVE,
+      status: ICalEventStatus.CONFIRMED,
       url: "https://lesindeciscalendar.fr/events",
     });
   }
@@ -53,7 +56,10 @@ export async function GET(
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": 'inline; filename="les-indecis.ics"',
-      "Cache-Control": "no-store",
+      "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "X-Published-TTL": "PT1M", // Durée de 1 minute (format ISO 8601)
     },
   });
 }

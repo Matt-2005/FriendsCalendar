@@ -243,51 +243,216 @@
 .calendarSection {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
 }
 
-.calendarInfo {
+.subscribeButtons {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.subscribeBtn {
   display: flex;
-  align-items: start;
-  gap: 15px;
+  align-items: center;
+  gap: 20px;
+  padding: 25px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 18px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.subscribeBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.subscribeBtn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+}
+
+.subscribeBtn:hover::before {
+  opacity: 1;
+}
+
+.subscribeBtnIcon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.subscribeBtnContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.subscribeBtnTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.subscribeBtnDesc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.subscribeBtnArrow {
+  font-size: 1.8rem;
+  color: white;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.subscribeBtn:hover .subscribeBtnArrow {
+  transform: translateX(5px);
+}
+
+.calendarFeatures {
+  display: flex;
+  gap: 20px;
   padding: 20px;
   background: #f8f9fa;
   border-radius: 15px;
+  flex-wrap: wrap;
 }
 
-.calendarIcon {
-  font-size: 2rem;
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.featureIcon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
-.calendarText {
-  flex: 1;
+.advancedOptions {
+  margin-top: 10px;
 }
 
-.calendarText h4 {
-  font-size: 1rem;
+.advancedSummary {
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #667eea;
+  transition: all 0.2s ease;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.advancedSummary::-webkit-details-marker {
+  display: none;
+}
+
+.advancedSummary::before {
+  content: '▶';
+  transition: transform 0.3s ease;
+}
+
+details[open] .advancedSummary::before {
+  transform: rotate(90deg);
+}
+
+.advancedSummary:hover {
+  background: #e9ecef;
+}
+
+.advancedContent {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.urlSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.urlLabel {
   font-weight: 600;
   color: #333;
-  margin: 0 0 8px 0;
-}
-
-.calendarText p {
   font-size: 0.9rem;
-  color: #666;
-  margin: 0 0 8px 0;
 }
 
-.calendarUrl {
-  display: inline-block;
+.urlBox {
+  display: flex;
+  gap: 10px;
+  align-items: center;
   background: white;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid #e0e0e0;
+}
+
+.urlCode {
+  flex: 1;
   font-family: monospace;
   font-size: 0.85rem;
   color: #667eea;
   word-break: break-all;
-  margin-top: 8px;
-  border: 1px solid #e0e0e0;
+}
+
+.copyButton {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.copyButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
 .regenerateButton {
@@ -435,19 +600,43 @@
     font-size: 1rem;
   }
 
-  .calendarInfo {
+  .subscribeButtons {
+    grid-template-columns: 1fr;
+  }
+
+  .subscribeBtn {
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .subscribeBtnIcon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .subscribeBtnTitle {
+    font-size: 1rem;
+  }
+
+  .subscribeBtnDesc {
+    font-size: 0.85rem;
+  }
+
+  .calendarFeatures {
     flex-direction: column;
-    text-align: center;
-    padding: 15px 12px;
+    gap: 15px;
   }
 
-  .calendarIcon {
-    margin: 0 auto;
+  .urlBox {
+    flex-direction: column;
   }
 
-  .calendarUrl {
+  .urlCode {
     font-size: 0.75rem;
-    word-break: break-all;
+  }
+
+  .copyButton {
+    width: 100%;
   }
 
   .regenerateButton {

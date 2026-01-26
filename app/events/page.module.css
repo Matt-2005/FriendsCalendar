@@ -302,6 +302,15 @@
   margin-bottom: 10px;
 }
 
+.notParticipantsLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e74c3c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
 .emptyParticipants {
   font-size: 0.9rem;
   color: #999;
@@ -345,6 +354,19 @@
   color: white;
   font-weight: 700;
   font-size: 0.9rem;
+}
+
+.notParticipatingAvatar {
+  opacity: 0.6;
+  border-color: #ffcdd2 !important;
+}
+
+.notParticipatingAvatar .avatarPlaceholder {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.notParticipatingAvatar:hover {
+  opacity: 0.8;
 }
 
 .eventActions {
@@ -574,6 +596,32 @@
   height: 12px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.availabilityIndicators {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.availIndicator {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.hasAvailabilities {
+  border: 2px solid #4caf50;
 }
 
 /* RESPONSIVE */
