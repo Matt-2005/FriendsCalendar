@@ -25,6 +25,12 @@
   flex-wrap: wrap;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .pageTitle {
   font-size: 2.5rem;
   font-weight: 700;

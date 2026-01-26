@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import Calendar from "./calendar";
 import Link from "next/link";
+import UserMenu from "../components/UserMenu";
 
 function fmtTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -41,10 +42,13 @@ export default async function EventsPage() {
               Organisez et participez aux événements avec vos amis
             </p>
           </div>
-          <Link href="/events/new" className={styles.createButton}>
-            <span className={styles.createIcon}>+</span>
-            Créer un événement
-          </Link>
+          <div className={styles.headerActions}>
+            <Link href="/events/new" className={styles.createButton}>
+              <span className={styles.createIcon}>+</span>
+              Créer un événement
+            </Link>
+            <UserMenu />
+          </div>
         </div>
 
         <div className={styles.mainContent}>

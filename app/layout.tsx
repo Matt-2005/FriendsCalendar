@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ConditionalNavbar from "./components/ConditionalNavbar";
 import SessionProviderWrapper from "./providers/SessionProviderWrapper";
 
 const geistSans = Geist({
@@ -32,7 +31,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SessionProviderWrapper>
-          <ConditionalNavbar />
           {children}
         </SessionProviderWrapper>
       </body>
