@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import AccountForm from "./AccountForm";
 import Link from "next/link";
 import UserMenu from "../components/UserMenu";
+import CopyButton from "./CopyButton";
 import styles from "./account.module.css";
 
 export default async function AccountPage() {
@@ -127,16 +128,7 @@ export default async function AccountPage() {
                     <label className={styles.urlLabel}>URL du calendrier (iCal)</label>
                     <div className={styles.urlBox}>
                       <code className={styles.urlCode}>{httpsUrl}</code>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(httpsUrl);
-                          alert("URL copiée !");
-                        }}
-                        className={styles.copyButton}
-                      >
-                        📋 Copier
-                      </button>
+                      <CopyButton url={httpsUrl} />
                     </div>
                   </div>
 
