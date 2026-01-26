@@ -580,10 +580,16 @@
 @media (max-width: 1200px) {
   .mainContent {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .leftPanel {
     position: static;
+    order: 2;
+  }
+
+  .rightPanel {
+    order: 1;
   }
 }
 
@@ -595,32 +601,46 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 15px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .pageTitle {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
 
   .pageSubtitle {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .createButton {
-    width: 100%;
-    justify-content: center;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+
+  .createIcon {
+    font-size: 1.3rem;
   }
 
   .leftPanel,
   .rightPanel {
     padding: 20px;
+    border-radius: 20px;
   }
 
-  .rightPanel {
-    max-height: none;
+  .eventsHeader h2 {
+    font-size: 1.3rem;
+  }
+
+  .eventCard {
+    padding: 20px;
   }
 
   .eventCardHeader {
-    flex-direction: column;
     gap: 15px;
   }
 
@@ -637,6 +657,23 @@
     font-size: 0.75rem;
   }
 
+  .eventTitle {
+    font-size: 1.15rem;
+  }
+
+  .eventMeta {
+    font-size: 0.85rem;
+    gap: 10px;
+  }
+
+  .eventDesc {
+    font-size: 0.9rem;
+  }
+
+  .participantsLabel {
+    font-size: 0.8rem;
+  }
+
   .calendarTitle {
     font-size: 1.2rem;
   }
@@ -644,9 +681,29 @@
   .calendarNavBtn {
     width: 35px;
     height: 35px;
+    font-size: 1.3rem;
+  }
+
+  .weekday {
+    font-size: 0.75rem;
   }
 
   .dayNumber {
+    font-size: 0.85rem;
+  }
+
+  .calendarDay {
+    border-radius: 10px;
+  }
+
+  .participantAvatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .btnJeParticipe,
+  .btnJeParticipePas {
+    padding: 10px 16px;
     font-size: 0.85rem;
   }
 }
@@ -657,37 +714,147 @@
   }
 
   .pageTitle {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
+  }
+
+  .pageSubtitle {
+    font-size: 0.85rem;
+  }
+
+  .headerActions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .createButton {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
   }
 
   .leftPanel,
   .rightPanel {
     padding: 15px;
-    border-radius: 20px;
   }
 
   .eventCard {
-    padding: 20px 15px;
+    padding: 15px;
+  }
+
+  .eventCardHeader {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .eventDate {
+    width: 55px;
+    height: 55px;
+  }
+
+  .eventDay {
+    font-size: 1.3rem;
+  }
+
+  .eventMonth {
+    font-size: 0.7rem;
   }
 
   .eventTitle {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .eventMeta {
-    font-size: 0.85rem;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+  }
+
+  .eventDeleteSlot {
+    top: 10px;
+    right: 10px;
+  }
+
+  .evDeleteBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
   }
 
   .calendarGrid {
-    gap: 5px;
+    gap: 4px;
   }
 
   .calendarDay {
     border-radius: 8px;
   }
 
+  .dayNumber {
+    font-size: 0.8rem;
+  }
+
+  .eventDots {
+    bottom: 3px;
+  }
+
+  .eventDot {
+    width: 4px;
+    height: 4px;
+  }
+
   .participantAvatar {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .avatarPlaceholder {
+    font-size: 0.85rem;
+  }
+
+  .btnJeParticipe,
+  .btnJeParticipePas {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+
+  .calendarLegend {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pageTitle {
+    font-size: 1.3rem;
+  }
+
+  .createButton {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+
+  .createIcon {
+    font-size: 1.2rem;
+  }
+
+  .eventCard {
+    padding: 12px;
+  }
+
+  .eventDate {
+    width: 50px;
+    height: 50px;
+  }
+
+  .eventDay {
+    font-size: 1.2rem;
+  }
+
+  .eventTitle {
+    font-size: 1rem;
+  }
+
+  .participantAvatar {
+    width: 32px;
+    height: 32px;
   }
 }
