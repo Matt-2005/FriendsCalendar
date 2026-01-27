@@ -8,8 +8,13 @@ interface Event {
   id: number;
   title: string;
   date: Date;
+  endDate: Date | null;
   location: string | null;
   description: string | null;
+  rsvps: {
+    status: "YES" | "NO";
+    userID: number;
+  }[];
 }
 
 interface User {
@@ -88,26 +93,49 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
     );
   };
 
+  // Vérifier si un jour fait partie d'un événement (début, fin ou entre les deux)
+  const isEventOnDay = (event: Event, day: number) => {
+    const currentDayDate = new Date(year, month, day);
+    currentDayDate.setHours(0, 0, 0, 0);
+    
+    const eventStart = new Date(event.date);
+    eventStart.setHours(0, 0, 0, 0);
+    
+    const eventEnd = event.endDate ? new Date(event.endDate) : new Date(event.date);
+    eventEnd.setHours(23, 59, 59, 999);
+    
+    return currentDayDate >= eventStart && currentDayDate <= eventEnd;
+  };
+
   const hasEvent = (day: number) => {
-    return events.some((event) => {
-      const eventDate = new Date(event.date);
-      return (
-        eventDate.getDate() === day &&
-        eventDate.getMonth() === month &&
-        eventDate.getFullYear() === year
-      );
-    });
+    return events.some((event) => isEventOnDay(event, day));
   };
 
   const getEventsForDay = (day: number) => {
-    return events.filter((event) => {
-      const eventDate = new Date(event.date);
-      return (
-        eventDate.getDate() === day &&
-        eventDate.getMonth() === month &&
-        eventDate.getFullYear() === year
-      );
-    });
+    return events.filter((event) => isEventOnDay(event, day));
+  };
+
+  // Déterminer le statut RSVP de l'utilisateur courant pour un événement
+  const getUserRSVPStatus = (event: Event): "YES" | "NO" | "PENDING" => {
+    if (!currentUserId) return "PENDING";
+    
+    const userRsvp = event.rsvps.find((rsvp) => rsvp.userID === currentUserId);
+    return userRsvp ? userRsvp.status : "PENDING";
+  };
+
+  // Déterminer la classe CSS selon le statut RSVP
+  const getEventColorClass = (event: Event): string => {
+    const status = getUserRSVPStatus(event);
+    switch (status) {
+      case "YES":
+        return styles.eventGreen;
+      case "NO":
+        return styles.eventRed;
+      case "PENDING":
+        return styles.eventOrange;
+      default:
+        return styles.eventOrange;
+    }
   };
 
   const getAvailabilitiesForDay = (day: number) => {
@@ -232,10 +260,15 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
             {dayEvents.slice(0, 3).map((event, idx) => (
               <div
                 key={idx}
-                className={styles.eventDot}
+                className={`${styles.eventDot} ${getEventColorClass(event)}`}
                 title={event.title}
               />
             ))}
+            {dayEvents.length > 3 && (
+              <div className={styles.eventMore} title={`+${dayEvents.length - 3} événements`}>
+                +{dayEvents.length - 3}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -244,6 +277,22 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
 
   return (
     <div className={styles.calendarContainer}>
+      {/* Légende des couleurs */}
+      <div className={styles.calendarLegend}>
+        <div className={styles.legendItem}>
+          <div className={`${styles.legendDot} ${styles.eventGreen}`}></div>
+          <span>J'ai accepté</span>
+        </div>
+        <div className={styles.legendItem}>
+          <div className={`${styles.legendDot} ${styles.eventOrange}`}></div>
+          <span>Pas encore répondu</span>
+        </div>
+        <div className={styles.legendItem}>
+          <div className={`${styles.legendDot} ${styles.eventRed}`}></div>
+          <span>J'ai refusé</span>
+        </div>
+      </div>
+
       <div className={styles.calendarHeader}>
         <button onClick={prevMonth} className={styles.calendarNavBtn}>
           ‹

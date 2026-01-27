@@ -202,6 +202,35 @@
   text-align: right;
 }
 
+.multiDayToggle {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox:checked + span {
+  color: #667eea;
+}
+
 .submitButton {
   width: 100%;
   padding: 18px;

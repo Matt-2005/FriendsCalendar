@@ -37,6 +37,7 @@ model Event {
   title String
   description String
   date DateTime
+  endDate DateTime?
   location String
   participantsID Int[] 
   createdAt DateTime @default(now())

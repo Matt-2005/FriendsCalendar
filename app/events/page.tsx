@@ -21,11 +21,12 @@ export default async function EventsPage() {
 
   const events = await prisma.event.findMany({
     select: {
-      id: true, title: true, date: true, location: true, description: true,
+      id: true, title: true, date: true, endDate: true, location: true, description: true,
       creatorId: true,
       rsvps: {
         select: { 
           status: true,
+          userID: true,
           user: { select: { id: true, pseudo: true, avatarUrl: true } }
         },
       },
@@ -150,7 +151,7 @@ export default async function EventsPage() {
                               <div
                                 key={u.id}
                                 className={styles.participantAvatar}
-                                title={u.pseudo ?? ""}
+                                data-tooltip={u.pseudo ?? ""}
                               >
                                 {u.avatarUrl ? (
                                   <img
@@ -162,6 +163,7 @@ export default async function EventsPage() {
                                     {u.pseudo?.[0]?.toUpperCase() ?? "?"}
                                   </span>
                                 )}
+                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
                               </div>
                             ))}
                             {participants.length > 5 && (
@@ -186,7 +188,7 @@ export default async function EventsPage() {
                               <div
                                 key={u.id}
                                 className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}
-                                title={u.pseudo ?? ""}
+                                data-tooltip={u.pseudo ?? ""}
                               >
                                 {u.avatarUrl ? (
                                   <img
@@ -198,6 +200,7 @@ export default async function EventsPage() {
                                     {u.pseudo?.[0]?.toUpperCase() ?? "?"}
                                   </span>
                                 )}
+                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
                               </div>
                             ))}
                             {notParticipating.length > 5 && (

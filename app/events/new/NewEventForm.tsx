@@ -10,6 +10,9 @@ export default function NewEventForm() {
   const [title, setTitle] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const [selectedEndDate, setSelectedEndDate] = useState("");
+  const [selectedEndTime, setSelectedEndTime] = useState("");
+  const [isMultiDay, setIsMultiDay] = useState(false);
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -47,9 +50,23 @@ export default function NewEventForm() {
     setLoading(true);
 
     try {
-      // Combiner date et heure
+      // Combiner date et heure de début
       const dateTimeString = `${selectedDate}T${selectedTime}`;
       const dateTime = new Date(dateTimeString);
+
+      // Combiner date et heure de fin si événement multi-jours
+      let endDateTime = null;
+      if (isMultiDay && selectedEndDate && selectedEndTime) {
+        const endDateTimeString = `${selectedEndDate}T${selectedEndTime}`;
+        endDateTime = new Date(endDateTimeString);
+
+        // Vérifier que la date de fin est après la date de début
+        if (endDateTime <= dateTime) {
+          setErr("La date de fin doit être après la date de début");
+          setLoading(false);
+          return;
+        }
+      }
 
       const res = await fetch("/api/events", {
         method: "POST",
@@ -59,6 +76,7 @@ export default function NewEventForm() {
           description: description.trim(),
           location: location.trim(),
           date: dateTime.toISOString(),
+          endDate: endDateTime ? endDateTime.toISOString() : null,
         }),
       });
       if (!res.ok) {
@@ -79,7 +97,8 @@ export default function NewEventForm() {
     !location.trim() ||
     !description.trim() ||
     !selectedDate ||
-    !selectedTime;
+    !selectedTime ||
+    (isMultiDay && (!selectedEndDate || !selectedEndTime));
 
   // Formater la date sélectionnée pour l'affichage
   const formatSelectedDate = () => {
@@ -175,6 +194,73 @@ export default function NewEventForm() {
           </div>
         )}
       </div>
+
+      {/* Option événement sur plusieurs jours */}
+      <div className={styles.multiDayToggle}>
+        <label className={styles.toggleLabel}>
+          <input
+            type="checkbox"
+            checked={isMultiDay}
+            onChange={(e) => setIsMultiDay(e.target.checked)}
+            className={styles.checkbox}
+          />
+          <span>Événement sur plusieurs jours</span>
+        </label>
+      </div>
+
+      {/* Date et heure de fin (si multi-jours) */}
+      {isMultiDay && (
+        <div className={styles.dateTimeSection}>
+          <label className={styles.label}>Date et heure de fin *</label>
+
+          <div className={styles.dateTimeInputs}>
+            <div className={styles.formGroup}>
+              <label htmlFor="endDate" className={styles.subLabel}>
+                📅 Date de fin
+              </label>
+              <input
+                id="endDate"
+                type="date"
+                value={selectedEndDate}
+                onChange={(e) => setSelectedEndDate(e.target.value)}
+                min={selectedDate}
+                className={styles.input}
+                required={isMultiDay}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="endTime" className={styles.subLabel}>
+                🕐 Heure de fin
+              </label>
+              <input
+                id="endTime"
+                type="time"
+                value={selectedEndTime}
+                onChange={(e) => setSelectedEndTime(e.target.value)}
+                className={styles.input}
+                required={isMultiDay}
+              />
+            </div>
+          </div>
+
+          {selectedEndDate && selectedEndTime && (
+            <div className={styles.datePreview}>
+              <span className={styles.previewIcon}>✓</span>
+              <span className={styles.previewText}>
+                {new Intl.DateTimeFormat("fr-FR", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(`${selectedEndDate}T${selectedEndTime}`))}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
 
       <div className={styles.formGroup}>
         <label htmlFor="location" className={styles.label}>

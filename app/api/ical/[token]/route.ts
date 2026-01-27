@@ -40,10 +40,15 @@ export async function GET(
     if (my === "NO") continue;
 
     // Tous les autres événements (YES ou sans réponse) sont confirmés
+    // Utiliser endDate si disponible, sinon ajouter 2h par défaut
+    const eventEnd = e.endDate 
+      ? e.endDate 
+      : new Date(e.date.getTime() + 2 * 60 * 60 * 1000);
+
     cal.createEvent({
       id: `event-${e.id}@lesindecis.fr`,
       start: e.date,
-      end: new Date(e.date.getTime() + 2 * 60 * 60 * 1000),
+      end: eventEnd,
       summary: e.title,
       description: e.description ?? "",
       location: e.location ?? "",
