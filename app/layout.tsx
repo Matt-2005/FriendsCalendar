@@ -24,6 +24,7 @@ export const viewport = {
   maximumScale: 5,
   userScalable: true,
   themeColor: "#667eea",
+  viewportFit: "cover", // Important pour Safari iOS et le Dynamic Island
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

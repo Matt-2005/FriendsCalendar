@@ -1,11 +1,12 @@
 // app/login/page.tsx
 import LoginForm from "./LoginForm";
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: { callbackUrl?: string };
+  searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const callbackUrl = searchParams?.callbackUrl ?? "/events";
+  const params = await searchParams;
+  const callbackUrl = params?.callbackUrl ?? "/events";
   return <LoginForm callbackUrl={callbackUrl} />;
 }

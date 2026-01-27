@@ -1,11 +1,18 @@
 .container {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding: 20px;
+  padding-top: max(60px, calc(env(safe-area-inset-top) + 40px));
+  padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
 }
 
 .background {

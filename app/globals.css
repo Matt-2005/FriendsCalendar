@@ -1,7 +1,11 @@
 /* ===== Reset très simple ===== */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
-html, body { height: 100%; overflow-x: hidden; }
+html, body { 
+  height: 100%; 
+  overflow-x: hidden;
+  position: relative;
+}
 
 
 html { scroll-behavior: smooth; }
