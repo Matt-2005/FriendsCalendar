@@ -9,12 +9,14 @@
   min-height: 100vh;
   min-height: 100dvh; /* Dynamic viewport height pour Safari iOS */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 40px 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   /* Support pour safe areas iOS */
-  padding-top: max(40px, env(safe-area-inset-top));
-  padding-bottom: max(40px, env(safe-area-inset-bottom));
+  padding-top: max(40px, calc(env(safe-area-inset-top) + 20px));
+  padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 20px));
   padding-left: max(20px, env(safe-area-inset-left));
   padding-right: max(20px, env(safe-area-inset-right));
 }
