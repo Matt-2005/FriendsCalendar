@@ -51,6 +51,11 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(arrayBuf);
 
     console.log("Buffer créé, taille:", buffer.length);
+    console.log("Config Cloudinary:", {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret_present: !!process.env.CLOUDINARY_API_SECRET
+    });
 
     const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
@@ -66,7 +71,9 @@ export async function POST(req: Request) {
         },
         (err, res) => {
           if (err) {
-            console.error("Erreur Cloudinary:", err);
+            console.error("Erreur Cloudinary complète:", JSON.stringify(err, null, 2));
+            console.error("Message:", err.message);
+            console.error("HTTP code:", err.http_code);
             reject(err);
           } else {
             console.log("Upload Cloudinary réussi:", res?.secure_url);
@@ -85,9 +92,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, url: uploaded.secure_url });
   } catch (error) {
     console.error("Erreur dans l'API avatar:", error);
+    
+    // Extraire plus d'infos si c'est une erreur Cloudinary
+    let details = "Erreur inconnue";
+    if (error && typeof error === 'object') {
+      const err = error as any;
+      details = err.message || err.error?.message || JSON.stringify(err, null, 2);
+    } else if (error instanceof Error) {
+      details = error.message;
+    }
+    
     return NextResponse.json({ 
       error: "Erreur lors de l'upload", 
-      details: error instanceof Error ? error.message : String(error) 
+      details: details
     }, { status: 500 });
   }
 }
