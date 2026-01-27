@@ -16,14 +16,33 @@ export async function POST(req: Request) {
   const description = String(body?.description ?? "").trim();
   const location = String(body?.location ?? "").trim();
   const dateStr = String(body?.date ?? "");
+  const endDateStr = body?.endDate ? String(body.endDate) : null;
   const date = new Date(dateStr);
+  const endDate = endDateStr ? new Date(endDateStr) : null;
 
   if (!title || !description || !location || isNaN(date.getTime())) {
     return NextResponse.json({ error: "Entrées invalides" }, { status: 400 });
   }
 
+  // Vérifier que endDate est valide si fourni
+  if (endDate && isNaN(endDate.getTime())) {
+    return NextResponse.json({ error: "Date de fin invalide" }, { status: 400 });
+  }
+
+  // Vérifier que endDate est après date
+  if (endDate && endDate <= date) {
+    return NextResponse.json({ error: "La date de fin doit être après la date de début" }, { status: 400 });
+  }
+
   await prisma.event.create({
-    data: { title, description, location, date, creatorId: userId },
+    data: { 
+      title, 
+      description, 
+      location, 
+      date, 
+      endDate,
+      creatorId: userId 
+    },
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });
@@ -34,14 +53,14 @@ export async function GET() {
   const rows = await prisma.event.findMany({
     orderBy: { date: "asc" },
     take: 500,
-    select: { id: true, title: true, date: true, description: true, location: true },
+    select: { id: true, title: true, date: true, endDate: true, description: true, location: true },
   });
 
   const events = rows.map(e => ({
     id: String(e.id),
     title: e.title,
     start: e.date.toISOString(),
-    end: new Date(e.date.getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2h par défaut
+    end: e.endDate ? e.endDate.toISOString() : new Date(e.date.getTime() + 2 * 60 * 60 * 1000).toISOString(), // endDate ou 2h par défaut
     url: `/events/${e.id}`,
     extendedProps: {
       description: e.description,
