@@ -14,30 +14,97 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ? Number(session.user.id) : null;
+    if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
-  const form = await req.formData().catch(() => null);
-  const file = form?.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    const form = await req.formData().catch((err) => {
+      console.error("Erreur lors de la lecture du FormData:", err);
+      return null;
+    });
+    
+    if (!form) {
+      return NextResponse.json({ error: "Impossible de lire les données du formulaire" }, { status: 400 });
+    }
 
-  // Convertit le File (Web API) en Buffer puis upload
-  const arrayBuf = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuf);
+    const file = form.get("file") as File | null;
+    
+    if (!file) {
+      return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    }
 
-  const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "lesindecis/avatars", resource_type: "image", overwrite: true },
-      (err, res) => (err ? reject(err) : resolve(res as any))
-    );
-    stream.end(buffer);
-  });
+    console.log("Fichier reçu:", { name: file.name, type: file.type, size: file.size });
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { avatarUrl: uploaded.secure_url },
-  });
+    // Vérifier la taille du fichier (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "Fichier trop volumineux (max 10MB)" }, { status: 400 });
+    }
 
-  return NextResponse.json({ ok: true, url: uploaded.secure_url });
+    // Vérifier que c'est bien une image
+    if (file.size === 0) {
+      return NextResponse.json({ error: "Le fichier est vide" }, { status: 400 });
+    }
+
+    // Convertit le File (Web API) en Buffer puis upload
+    const arrayBuf = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuf);
+
+    console.log("Buffer créé, taille:", buffer.length);
+    console.log("Config Cloudinary:", {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret_present: !!process.env.CLOUDINARY_API_SECRET
+    });
+
+    const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { 
+          folder: "lesindecis/avatars", 
+          resource_type: "image", 
+          overwrite: true,
+          // L'image est déjà recadrée côté client, on optimise juste
+          transformation: [
+            { quality: "auto:good" }, // Qualité optimisée
+            { fetch_format: "auto" } // Format optimal (webp si supporté)
+          ]
+        },
+        (err, res) => {
+          if (err) {
+            console.error("Erreur Cloudinary complète:", JSON.stringify(err, null, 2));
+            console.error("Message:", err.message);
+            console.error("HTTP code:", err.http_code);
+            reject(err);
+          } else {
+            console.log("Upload Cloudinary réussi:", res?.secure_url);
+            resolve(res as any);
+          }
+        }
+      );
+      stream.end(buffer);
+    });
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: uploaded.secure_url },
+    });
+
+    return NextResponse.json({ ok: true, url: uploaded.secure_url });
+  } catch (error) {
+    console.error("Erreur dans l'API avatar:", error);
+    
+    // Extraire plus d'infos si c'est une erreur Cloudinary
+    let details = "Erreur inconnue";
+    if (error && typeof error === 'object') {
+      const err = error as any;
+      details = err.message || err.error?.message || JSON.stringify(err, null, 2);
+    } else if (error instanceof Error) {
+      details = error.message;
+    }
+    
+    return NextResponse.json({ 
+      error: "Erreur lors de l'upload", 
+      details: details
+    }, { status: 500 });
+  }
 }

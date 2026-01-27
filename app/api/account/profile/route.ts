@@ -1,43 +1,71 @@
-// app/api/account/avatar/route.ts
+// app/api/account/profile/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
-import { v2 as cloudinary } from "cloudinary";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+export async function PUT(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ? Number(session.user.id) : null;
+    
+    if (!userId) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
 
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    const body = await req.json().catch(() => null);
+    
+    if (!body) {
+      return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
+    }
 
-  const form = await req.formData().catch(() => null);
-  const file = form?.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    const { email, pseudo } = body;
 
-  // Convertit le File (Web API) en Buffer puis upload
-  const arrayBuf = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuf);
+    // Validation basique
+    if (!email || !pseudo) {
+      return NextResponse.json({ error: "Email et pseudo requis" }, { status: 400 });
+    }
 
-  const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "lesindecis/avatars", resource_type: "image", overwrite: true },
-      (err, res) => (err ? reject(err) : resolve(res as any))
-    );
-    stream.end(buffer);
-  });
+    // Vérifier si l'email est déjà utilisé par un autre utilisateur
+    if (email) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: email,
+          id: { not: userId }
+        }
+      });
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { avatarUrl: uploaded.secure_url },
-  });
+      if (existingUser) {
+        return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 400 });
+      }
+    }
 
-  return NextResponse.json({ ok: true, url: uploaded.secure_url });
+    // Mettre à jour le profil
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: email,
+        pseudo: pseudo
+      }
+    });
+
+    console.log("Profil mis à jour:", { userId, email, pseudo });
+
+    return NextResponse.json({ 
+      ok: true, 
+      user: {
+        email: updatedUser.email,
+        pseudo: updatedUser.pseudo
+      }
+    });
+
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du profil:", error);
+    return NextResponse.json({ 
+      error: "Erreur lors de la mise à jour du profil",
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
+  }
 }
