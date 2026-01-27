@@ -34,6 +34,21 @@ export default async function EventsPage() {
     take: 100,
   });
 
+  // Récupérer les disponibilités
+  let availabilities: any[] = [];
+  try {
+    availabilities = await prisma.availability.findMany({
+      include: {
+        user: {
+          select: { id: true, pseudo: true, avatarUrl: true },
+        },
+      },
+      orderBy: { startDate: "asc" },
+    });
+  } catch (error) {
+    console.log("Availability table not found, skipping availabilities");
+  }
+
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.container}>
@@ -55,7 +70,7 @@ export default async function EventsPage() {
 
         <div className={styles.mainContent}>
           <div className={styles.leftPanel}>
-            <Calendar events={events} />
+            <Calendar events={events} availabilities={availabilities} currentUserId={meId} />
           </div>
 
           <div className={styles.rightPanel}>
