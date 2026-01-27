@@ -151,7 +151,7 @@ export default async function EventsPage() {
                               <div
                                 key={u.id}
                                 className={styles.participantAvatar}
-                                title={u.pseudo ?? ""}
+                                data-tooltip={u.pseudo ?? ""}
                               >
                                 {u.avatarUrl ? (
                                   <img
@@ -163,6 +163,7 @@ export default async function EventsPage() {
                                     {u.pseudo?.[0]?.toUpperCase() ?? "?"}
                                   </span>
                                 )}
+                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
                               </div>
                             ))}
                             {participants.length > 5 && (
@@ -187,7 +188,7 @@ export default async function EventsPage() {
                               <div
                                 key={u.id}
                                 className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}
-                                title={u.pseudo ?? ""}
+                                data-tooltip={u.pseudo ?? ""}
                               >
                                 {u.avatarUrl ? (
                                   <img
@@ -199,6 +200,7 @@ export default async function EventsPage() {
                                     {u.pseudo?.[0]?.toUpperCase() ?? "?"}
                                   </span>
                                 )}
+                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
                               </div>
                             ))}
                             {notParticipating.length > 5 && (
