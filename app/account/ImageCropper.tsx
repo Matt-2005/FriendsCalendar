@@ -47,10 +47,13 @@ export default function ImageCropper({
     if (!croppedAreaPixels) return;
 
     try {
+      console.log("Début du recadrage...");
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+      console.log("Blob créé:", { size: croppedBlob.size, type: croppedBlob.type });
       onCropComplete(croppedBlob);
     } catch (error) {
       console.error("Erreur lors du recadrage:", error);
+      alert("Erreur lors du recadrage de l'image. Veuillez réessayer.");
     }
   };
 
@@ -159,8 +162,14 @@ function createImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
-    image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous");
+    image.addEventListener("error", (error) => {
+      console.error("Erreur lors du chargement de l'image:", error);
+      reject(error);
+    });
+    // Pas besoin de crossOrigin pour les data URLs
+    if (!url.startsWith('data:')) {
+      image.setAttribute("crossOrigin", "anonymous");
+    }
     image.src = url;
   });
 }

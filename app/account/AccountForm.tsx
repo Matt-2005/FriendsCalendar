@@ -76,21 +76,35 @@ export default function AccountForm({
     setUploading(true);
     setMsg({ type: "info", text: "Upload en cours..." });
     
-    const fd = new FormData();
-    fd.append("file", croppedBlob, "avatar.jpg");
-    
-    const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
-    setUploading(false);
-    
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setMsg({ type: "error", text: j.error ?? "Upload échoué" });
-      return;
+    try {
+      // Convertir le Blob en File pour avoir un nom et type correct
+      const croppedFile = new File([croppedBlob], "avatar.jpg", { 
+        type: "image/jpeg",
+        lastModified: Date.now()
+      });
+      
+      const fd = new FormData();
+      fd.append("file", croppedFile);
+      
+      const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
+      
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error("Erreur upload:", j);
+        setMsg({ type: "error", text: j.error ?? "Upload échoué" });
+        setUploading(false);
+        return;
+      }
+      
+      const j = await res.json();
+      setAvatarUrl(j.url);
+      setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
+    } catch (error) {
+      console.error("Erreur lors de l'upload:", error);
+      setMsg({ type: "error", text: "Erreur lors de l'upload de l'image" });
+    } finally {
+      setUploading(false);
     }
-    
-    const j = await res.json();
-    setAvatarUrl(j.url);
-    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
   }
 
   function handleCropCancel() {
