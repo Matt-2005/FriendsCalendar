@@ -1,7 +1,7 @@
 // app/events/Calendar.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./page.module.css";
 
 interface Event {
@@ -42,6 +42,21 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Bloquer le scroll du body quand le modal est ouvert
+  useEffect(() => {
+    if (showAvailabilityModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [showAvailabilityModal]);
 
   const monthNames = [
     "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
