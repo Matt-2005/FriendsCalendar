@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import styles from "./account.module.css";
 import ImageCropper from "./ImageCropper";
 
@@ -16,6 +17,7 @@ export default function AccountForm({
   const [email, setEmail] = useState(initialEmail);
   const [pseudo, setPseudo] = useState(initialPseudo);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
+  const { update: updateSession } = useSession();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(
@@ -38,6 +40,10 @@ export default function AccountForm({
       setMsg({ type: "error", text: j.error ?? "Erreur de sauvegarde" });
       return;
     }
+    
+    // Mettre à jour la session NextAuth avec les nouvelles données
+    await updateSession({ name: pseudo, email: email });
+    
     setMsg({ type: "success", text: "Modifications enregistrées avec succès !" });
   }
 
@@ -96,9 +102,13 @@ export default function AccountForm({
         return;
       }
       
-      const j = await res.json();
-      setAvatarUrl(j.url);
-      setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
+    const j = await res.json();
+    setAvatarUrl(j.url);
+    
+    // Mettre à jour la session NextAuth avec le nouvel avatar
+    await updateSession({ avatarUrl: j.url });
+    
+    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
     } catch (error) {
       console.error("Erreur lors de l'upload:", error);
       setMsg({ type: "error", text: "Erreur lors de l'upload de l'image" });

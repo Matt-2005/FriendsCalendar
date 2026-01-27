@@ -20,23 +20,39 @@ export const authOptions: NextAuthOptions = {
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
 
-        // On met bien le pseudo dans `name`
+        // On met bien le pseudo dans `name` et l'avatarUrl dans `image`
         return {
           id: String(user.id),
           email: user.email,
           name: user.pseudo ?? null,
+          image: user.avatarUrl ?? null,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      // ⬇️ lors du login, propage id + name + email dans le token
+    async jwt({ token, user, trigger, session: updateSession }) {
+      // ⬇️ lors du login, propage id + name + email + image dans le token
       if (user) {
         token.id = (user as any).id;
-        token.name = user.name ?? null;    // 🔑 sans ça, `session.user.name` restera vide
+        token.name = user.name ?? null;
         token.email = user.email ?? null;
+        token.picture = user.image ?? null; // NextAuth utilise 'picture' dans le token
       }
+      
+      // ⬇️ lors d'une mise à jour de session (après upload avatar)
+      if (trigger === "update" && updateSession) {
+        if (updateSession.avatarUrl) {
+          token.picture = updateSession.avatarUrl;
+        }
+        if (updateSession.name) {
+          token.name = updateSession.name;
+        }
+        if (updateSession.email) {
+          token.email = updateSession.email;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
@@ -45,6 +61,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id as string;
         session.user.name = (token.name as string | null) ?? session.user.name ?? null;
         session.user.email = (token.email as string | null) ?? session.user.email ?? null;
+        session.user.image = (token.picture as string | null) ?? session.user.image ?? null;
       }
       return session;
     },
