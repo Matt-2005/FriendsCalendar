@@ -72,6 +72,7 @@
   max-width: 450px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.6s ease-out;
+  margin: 0 auto;
 }
 
 @keyframes slideUp {
@@ -258,12 +259,15 @@
 /* Tablettes */
 @media (max-width: 768px) {
   .container {
-    padding: 20px 15px;
+    padding: 15px;
+    padding-top: max(50px, calc(env(safe-area-inset-top) + 30px));
+    padding-bottom: max(50px, calc(env(safe-area-inset-bottom) + 30px));
   }
 
   .formCard {
     padding: 40px 30px;
-    max-width: 500px;
+    max-width: 450px;
+    border-radius: 25px;
   }
 
   .title {
@@ -284,13 +288,16 @@
 @media (max-width: 480px) {
   .container {
     padding: 10px;
-    height: 100svh; /* Support pour les navigateurs mobiles */
+    padding-top: max(50px, calc(env(safe-area-inset-top) + 30px));
+    padding-bottom: max(50px, calc(env(safe-area-inset-bottom) + 30px));
   }
 
   .formCard {
-    padding: 35px 25px;
-    border-radius: 25px;
+    padding: 30px 20px;
+    border-radius: 20px;
     max-width: 100%;
+    width: 100%;
+    margin: 0;
   }
 
   .backButton {
@@ -363,25 +370,36 @@
 
 /* Très petits écrans */
 @media (max-width: 360px) {
+  .container {
+    padding: 5px;
+  }
+
   .formCard {
-    padding: 30px 20px;
+    padding: 25px 15px;
+    border-radius: 15px;
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .subtitle {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .input {
-    padding: 11px 14px;
+    padding: 10px 12px;
     font-size: 0.9rem;
   }
 
   .submitButton {
     font-size: 0.95rem;
+    padding: 12px;
+  }
+
+  .logo {
+    width: 45px;
+    height: 45px;
   }
 }
 
