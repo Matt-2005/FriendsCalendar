@@ -21,11 +21,12 @@ export default async function EventsPage() {
 
   const events = await prisma.event.findMany({
     select: {
-      id: true, title: true, date: true, location: true, description: true,
+      id: true, title: true, date: true, endDate: true, location: true, description: true,
       creatorId: true,
       rsvps: {
         select: { 
           status: true,
+          userID: true,
           user: { select: { id: true, pseudo: true, avatarUrl: true } }
         },
       },

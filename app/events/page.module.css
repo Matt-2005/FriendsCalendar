@@ -576,22 +576,65 @@
   background: #667eea;
 }
 
+/* Couleurs selon statut RSVP */
+.eventGreen {
+  background: #4caf50 !important;
+}
+
+.eventOrange {
+  background: #ff9800 !important;
+}
+
+.eventRed {
+  background: #f44336 !important;
+}
+
 .today .eventDot {
   background: white;
+  border: 1px solid currentColor;
+}
+
+.today .eventGreen {
+  border-color: #4caf50;
+}
+
+.today .eventOrange {
+  border-color: #ff9800;
+}
+
+.today .eventRed {
+  border-color: #f44336;
+}
+
+.eventMore {
+  font-size: 0.6rem;
+  color: #666;
+  font-weight: 600;
 }
 
 .calendarLegend {
   display: flex;
   gap: 20px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #f0f0f0;
+  margin-bottom: 25px;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  flex-wrap: wrap;
 }
 
 .legendItem {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.legendDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
   font-size: 0.85rem;
   color: #666;
 }
