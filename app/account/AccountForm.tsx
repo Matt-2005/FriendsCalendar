@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./account.module.css";
+import ImageCropper from "./ImageCropper";
 
 export default function AccountForm({
   initialEmail,
@@ -20,6 +21,7 @@ export default function AccountForm({
   const [msg, setMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(
     null
   );
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +41,7 @@ export default function AccountForm({
     setMsg({ type: "success", text: "Modifications enregistrées avec succès !" });
   }
 
-  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files?.[0]) return;
     
     const file = e.target.files[0];
@@ -58,11 +60,25 @@ export default function AccountForm({
       return;
     }
     
+    // Lire le fichier et afficher le cropper
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Réinitialiser l'input pour permettre de sélectionner le même fichier
+    e.target.value = "";
+  }
+
+  async function handleCropComplete(croppedBlob: Blob) {
+    setImageToCrop(null);
     setUploading(true);
     setMsg({ type: "info", text: "Upload en cours..." });
     
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", croppedBlob, "avatar.jpg");
+    
     const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
     setUploading(false);
     
@@ -74,37 +90,50 @@ export default function AccountForm({
     
     const j = await res.json();
     setAvatarUrl(j.url);
-    setMsg({ type: "success", text: "Avatar mis à jour avec succès ! (recadré en carré)" });
+    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
+  }
+
+  function handleCropCancel() {
+    setImageToCrop(null);
   }
 
   const initial = pseudo?.[0]?.toUpperCase() || email?.[0]?.toUpperCase() || "?";
 
   return (
-    <form onSubmit={onSave} className={styles.form}>
-      <div className={styles.avatarSection}>
-        <div className={styles.avatarPreview}>
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className={styles.avatarImage} />
-          ) : (
-            <div className={styles.avatarPlaceholder}>{initial}</div>
-          )}
+    <>
+      {imageToCrop && (
+        <ImageCropper
+          imageSrc={imageToCrop}
+          onCropComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+        />
+      )}
+
+      <form onSubmit={onSave} className={styles.form}>
+        <div className={styles.avatarSection}>
+          <div className={styles.avatarPreview}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className={styles.avatarImage} />
+            ) : (
+              <div className={styles.avatarPlaceholder}>{initial}</div>
+            )}
+          </div>
+          <div className={styles.avatarInfo}>
+            <label className={styles.avatarLabel}>Photo de profil</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onFileSelect}
+              className={styles.fileInput}
+              disabled={uploading}
+            />
+            {uploading && (
+              <p className={styles.messageInfo}>
+                <span className={styles.loading}>Upload en cours...</span>
+              </p>
+            )}
+          </div>
         </div>
-        <div className={styles.avatarInfo}>
-          <label className={styles.avatarLabel}>Photo de profil</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={onUpload}
-            className={styles.fileInput}
-            disabled={uploading}
-          />
-          {uploading && (
-            <p className={styles.messageInfo}>
-              <span className={styles.loading}>Upload en cours...</span>
-            </p>
-          )}
-        </div>
-      </div>
 
       <div className={styles.formGroup}>
         <label htmlFor="pseudo" className={styles.label}>
@@ -152,5 +181,6 @@ export default function AccountForm({
         {saving ? "Enregistrement..." : "Enregistrer les modifications"}
       </button>
     </form>
+    </>
   );
 }

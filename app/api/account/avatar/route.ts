@@ -37,9 +37,8 @@ export async function POST(req: Request) {
         folder: "lesindecis/avatars", 
         resource_type: "image", 
         overwrite: true,
-        // Recadrage en carré et redimensionnement
+        // L'image est déjà recadrée côté client, on optimise juste
         transformation: [
-          { width: 500, height: 500, crop: "fill", gravity: "face" }, // Crop en carré centré sur le visage
           { quality: "auto:good" }, // Qualité optimisée
           { fetch_format: "auto" } // Format optimal (webp si supporté)
         ]
