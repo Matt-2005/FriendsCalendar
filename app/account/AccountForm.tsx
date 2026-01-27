@@ -41,20 +41,40 @@ export default function AccountForm({
 
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files?.[0]) return;
+    
+    const file = e.target.files[0];
+    
+    // Vérification de la taille (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setMsg({ type: "error", text: "Fichier trop volumineux (max 10MB)" });
+      e.target.value = "";
+      return;
+    }
+    
+    // Vérification du type
+    if (!file.type.startsWith("image/")) {
+      setMsg({ type: "error", text: "Veuillez sélectionner une image" });
+      e.target.value = "";
+      return;
+    }
+    
     setUploading(true);
-    setMsg(null);
+    setMsg({ type: "info", text: "Upload en cours..." });
+    
     const fd = new FormData();
-    fd.append("file", e.target.files[0]);
+    fd.append("file", file);
     const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
     setUploading(false);
+    
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
       setMsg({ type: "error", text: j.error ?? "Upload échoué" });
       return;
     }
+    
     const j = await res.json();
     setAvatarUrl(j.url);
-    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
+    setMsg({ type: "success", text: "Avatar mis à jour avec succès ! (recadré en carré)" });
   }
 
   const initial = pseudo?.[0]?.toUpperCase() || email?.[0]?.toUpperCase() || "?";

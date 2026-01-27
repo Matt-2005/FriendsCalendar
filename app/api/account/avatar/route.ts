@@ -22,13 +22,28 @@ export async function POST(req: Request) {
   const file = form?.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
 
+  // Vérifier la taille du fichier (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: "Fichier trop volumineux (max 10MB)" }, { status: 400 });
+  }
+
   // Convertit le File (Web API) en Buffer puis upload
   const arrayBuf = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuf);
 
   const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: "lesindecis/avatars", resource_type: "image", overwrite: true },
+      { 
+        folder: "lesindecis/avatars", 
+        resource_type: "image", 
+        overwrite: true,
+        // Recadrage en carré et redimensionnement
+        transformation: [
+          { width: 500, height: 500, crop: "fill", gravity: "face" }, // Crop en carré centré sur le visage
+          { quality: "auto:good" }, // Qualité optimisée
+          { fetch_format: "auto" } // Format optimal (webp si supporté)
+        ]
+      },
       (err, res) => (err ? reject(err) : resolve(res as any))
     );
     stream.end(buffer);
