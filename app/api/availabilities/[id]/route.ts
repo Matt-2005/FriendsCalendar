@@ -100,7 +100,6 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      start.setHours(0, 0, 0, 0);
       updateData.startDate = start;
     }
 
@@ -112,7 +111,6 @@ export async function PATCH(
           { status: 400 }
         );
       }
-      end.setHours(23, 59, 59, 999);
       updateData.endDate = end;
     }
 

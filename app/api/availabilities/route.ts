@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Valider les dates
+    // Valider les dates (ne pas modifier les heures, elles sont déjà normalisées par le client)
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -62,10 +62,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Ajuster les dates pour couvrir la journée entière
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
 
     if (start > end) {
       return NextResponse.json(
