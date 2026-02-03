@@ -20,6 +20,16 @@ export default async function EventsPage() {
   const session = await getServerSession(authOptions);
   const meId = session?.user?.id ? Number(session.user.id) : null;
 
+  // Récupérer le rôle de l'utilisateur
+  let userRole: string | null = null;
+  if (meId) {
+    const user = await prisma.user.findUnique({
+      where: { id: meId },
+      select: { role: true }
+    });
+    userRole = user?.role || null;
+  }
+
   // Nettoyer les événements passés avant d'afficher la page
   await cleanupPastEvents();
 
@@ -108,7 +118,7 @@ export default async function EventsPage() {
                   
                   return (
                     <div key={e.id} className={styles.eventCard}>
-                      {meId === e.creatorId && (
+                      {(meId === e.creatorId || userRole === "ADMIN") && (
                         <div className={styles.eventDeleteSlot}>
                           <DeleteEventButton eventId={e.id} />
                         </div>
