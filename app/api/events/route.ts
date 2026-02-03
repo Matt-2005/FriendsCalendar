@@ -3,8 +3,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { cleanupPastEvents } from "@/lib/cleanupEvents";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -48,8 +50,11 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true }, { status: 201 });
 }
 
-// ✅ NOUVEAU: renvoie la liste d’events pour FullCalendar
+// ✅ NOUVEAU: renvoie la liste d'events pour FullCalendar
 export async function GET() {
+  // Nettoyer les événements passés avant de récupérer la liste
+  await cleanupPastEvents();
+  
   const rows = await prisma.event.findMany({
     orderBy: { date: "asc" },
     take: 500,

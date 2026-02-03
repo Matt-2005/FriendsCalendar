@@ -36,15 +36,28 @@ export async function GET(
 
   for (const e of events) {
     const my = e.rsvps[0]?.status ?? null; // null = sans réponse
-    // Exclure uniquement les événements refusés
-    if (my === "NO") continue;
-
-    // Tous les autres événements (YES ou sans réponse) sont confirmés
+    
     // Utiliser endDate si disponible, sinon ajouter 2h par défaut
     const eventEnd = e.endDate 
       ? e.endDate 
       : new Date(e.date.getTime() + 2 * 60 * 60 * 1000);
 
+    // Si l'utilisateur a refusé, créer un événement ANNULÉ pour le supprimer du calendrier
+    if (my === "NO") {
+      cal.createEvent({
+        id: `event-${e.id}@lesindecis.fr`,
+        start: e.date,
+        end: eventEnd,
+        summary: e.title,
+        description: e.description ?? "",
+        location: e.location ?? "",
+        status: ICalEventStatus.CANCELLED, // ⬅️ CANCELLED pour supprimer l'événement
+        url: "https://lesindeciscalendar.fr/events",
+      });
+      continue;
+    }
+
+    // Tous les autres événements (YES ou sans réponse) sont confirmés
     cal.createEvent({
       id: `event-${e.id}@lesindecis.fr`,
       start: e.date,

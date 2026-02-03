@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/authOptions";
 import Calendar from "./calendar";
 import Link from "next/link";
 import UserMenu from "../components/UserMenu";
+import { cleanupPastEvents } from "@/lib/cleanupEvents";
 
 function fmtTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -19,10 +20,26 @@ export default async function EventsPage() {
   const session = await getServerSession(authOptions);
   const meId = session?.user?.id ? Number(session.user.id) : null;
 
+  // Récupérer le rôle de l'utilisateur
+  let userRole: string | null = null;
+  if (meId) {
+    const user = await prisma.user.findUnique({
+      where: { id: meId },
+      select: { role: true }
+    });
+    userRole = user?.role || null;
+  }
+
+  // Nettoyer les événements passés avant d'afficher la page
+  await cleanupPastEvents();
+
   const events = await prisma.event.findMany({
     select: {
       id: true, title: true, date: true, endDate: true, location: true, description: true,
       creatorId: true,
+      creator: {
+        select: { id: true, pseudo: true, avatarUrl: true }
+      },
       rsvps: {
         select: { 
           status: true,
@@ -101,7 +118,7 @@ export default async function EventsPage() {
                   
                   return (
                     <div key={e.id} className={styles.eventCard}>
-                      {meId === e.creatorId && (
+                      {(meId === e.creatorId || userRole === "ADMIN") && (
                         <div className={styles.eventDeleteSlot}>
                           <DeleteEventButton eventId={e.id} />
                         </div>
@@ -109,6 +126,9 @@ export default async function EventsPage() {
 
                       <div className={styles.eventCardHeader}>
                         <div className={styles.eventDate}>
+                          <div className={styles.eventWeekday}>
+                            {new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(new Date(e.date))}
+                          </div>
                           <div className={styles.eventDay}>
                             {new Date(e.date).getDate()}
                           </div>
@@ -119,6 +139,9 @@ export default async function EventsPage() {
 
                         <div className={styles.eventInfo}>
                           <h3 className={styles.eventTitle}>{e.title}</h3>
+                          <div className={styles.eventCreator}>
+                            👤 Organisé par <strong>{e.creator.pseudo}</strong>
+                          </div>
                           <div className={styles.eventMeta}>
                             <span className={styles.eventTime}>
                               🕐 {fmtTime(e.date)}

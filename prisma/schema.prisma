@@ -18,12 +18,18 @@ enum RSVPStatus {
   NO
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id Int @id @default(autoincrement())
   email String @unique
   passwordHash String
   pseudo String
   avatarUrl String?
+  role UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   events Event[] @relation("UserEvents")

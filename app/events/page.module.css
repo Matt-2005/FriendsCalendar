@@ -99,11 +99,13 @@
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border-radius: 25px;
-  padding: 30px;
+  padding: 25px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -114,11 +116,11 @@
   border-radius: 25px;
   padding: 30px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: calc(100vh - 200px);
+  overflow: hidden;
 }
 
 .eventsHeader {
@@ -128,6 +130,7 @@
   margin-bottom: 25px;
   padding-bottom: 20px;
   border-bottom: 2px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
 .eventsHeader h2 {
@@ -151,8 +154,11 @@
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
   padding-right: 10px;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .eventsList::-webkit-scrollbar {
@@ -238,8 +244,8 @@
 
 .eventDate {
   flex-shrink: 0;
-  width: 70px;
-  height: 70px;
+  width: 75px;
+  height: 85px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 15px;
   display: flex;
@@ -248,6 +254,15 @@
   justify-content: center;
   color: white;
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  padding: 8px 5px;
+}
+
+.eventWeekday {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.9;
+  margin-bottom: 2px;
 }
 
 .eventDay {
@@ -272,8 +287,20 @@
   font-size: 1.3rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   line-height: 1.3;
+}
+
+.eventCreator {
+  font-size: 0.85rem;
+  color: #667eea;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.eventCreator strong {
+  font-weight: 700;
+  color: #764ba2;
 }
 
 .eventMeta {
@@ -510,6 +537,11 @@
 /* CALENDAR STYLES */
 .calendarContainer {
   width: 100%;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .calendarHeader {
@@ -568,11 +600,15 @@
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .calendarDay {
   aspect-ratio: 1;
+  max-height: 110px;
+  min-height: 65px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -780,6 +816,12 @@
   .rightPanel {
     padding: 20px;
     border-radius: 20px;
+    max-height: calc(100vh - 250px);
+  }
+  
+  .calendarDay {
+    max-height: 80px;
+    min-height: 55px;
   }
 
   .eventsHeader h2 {
@@ -885,6 +927,12 @@
   .leftPanel,
   .rightPanel {
     padding: 15px;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .calendarDay {
+    max-height: 65px;
+    min-height: 50px;
   }
 
   .eventCard {
@@ -1014,6 +1062,9 @@
   margin-top: 30px;
   padding-top: 30px;
   border-top: 2px solid #f0f0f0;
+  max-height: 400px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .availabilityListTitle {
@@ -1135,6 +1186,134 @@
 .deleteAvailabilityBtn:hover {
   background: #d32f2f;
   transform: scale(1.1);
+}
+
+/* MODAL SECTIONS */
+.modalEventsSection,
+.modalAvailabilitiesSection {
+  margin-bottom: 20px;
+}
+
+.modalSectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 15px 0;
+}
+
+.modalEventCard {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.modalEventHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.modalEventStatus {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.statusYes {
+  background: #4caf50;
+  color: white;
+}
+
+.statusNo {
+  background: #f44336;
+  color: white;
+}
+
+.statusPending {
+  background: #ff9800;
+  color: white;
+}
+
+.modalEventTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.modalEventDesc {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.modalEventMeta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 8px;
+}
+
+.modalAvailabilityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.modalAvailUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modalAvailAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.modalAvailAvatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.modalAvailBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.modalDivider {
+  height: 2px;
+  background: #e0e0e0;
+  margin: 25px 0;
+  border-radius: 1px;
 }
 
 /* MODAL */
