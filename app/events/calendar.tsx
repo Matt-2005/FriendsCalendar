@@ -47,6 +47,23 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [availabilityToDelete, setAvailabilityToDelete] = useState<number | null>(null);
+
+  // Helper pour convertir une Date en format "YYYY-MM-DD" local (sans conversion UTC)
+  const toLocalDateString = (date: Date | null): string => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper pour créer une Date à partir d'une chaîne "YYYY-MM-DD" en local (minuit local)
+  const fromLocalDateString = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   // Bloquer le scroll du body quand le modal est ouvert
   useEffect(() => {
@@ -74,7 +91,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+  // Ajuster pour que lundi soit le premier jour (0) au lieu de dimanche
+  const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
   const prevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -139,14 +157,23 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   };
 
   const getAvailabilitiesForDay = (day: number) => {
+    // Créer une date normalisée pour le jour courant (minuit local)
     const currentDayDate = new Date(year, month, day);
+    currentDayDate.setHours(0, 0, 0, 0);
+    const currentDayTimestamp = currentDayDate.getTime();
+    
     return availabilities.filter((avail) => {
-      const start = new Date(avail.startDate);
-      const end = new Date(avail.endDate);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      currentDayDate.setHours(12, 0, 0, 0);
-      return currentDayDate >= start && currentDayDate <= end;
+      // Extraire les dates sans se soucier des heures/timezone
+      const startDate = new Date(avail.startDate);
+      const startNormalized = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const startTimestamp = startNormalized.getTime();
+      
+      const endDate = new Date(avail.endDate);
+      const endNormalized = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      const endTimestamp = endNormalized.getTime();
+      
+      // Vérifier si le jour courant est entre le début et la fin (inclus)
+      return currentDayTimestamp >= startTimestamp && currentDayTimestamp <= endTimestamp;
     });
   };
 
@@ -174,12 +201,19 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
 
     setIsSubmitting(true);
     try {
+      // Normaliser les dates : début à minuit, fin à 23:59:59
+      const startDateTime = new Date(selectedDate);
+      startDateTime.setHours(0, 0, 0, 0);
+      
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+
       const res = await fetch("/api/availabilities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          startDate: selectedDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: startDateTime.toISOString(),
+          endDate: endDateTime.toISOString(),
           type: availabilityType,
           note: availabilityNote || null,
         }),
@@ -200,15 +234,22 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
     }
   };
 
-  const handleDeleteAvailability = async (id: number) => {
-    if (!confirm("Supprimer cette disponibilité ?")) return;
+  const handleDeleteClick = (id: number) => {
+    setAvailabilityToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!availabilityToDelete) return;
 
     try {
-      const res = await fetch(`/api/availabilities/${id}`, {
+      const res = await fetch(`/api/availabilities/${availabilityToDelete}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
+        setShowDeleteConfirm(false);
+        setAvailabilityToDelete(null);
         window.location.reload();
       } else {
         alert("Erreur lors de la suppression");
@@ -217,6 +258,11 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
       console.error("Error deleting availability:", error);
       alert("Erreur lors de la suppression");
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setAvailabilityToDelete(null);
   };
 
   const days = [];
@@ -316,7 +362,7 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
       </div>
 
       <div className={styles.calendarWeekdays}>
-        {["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"].map((day) => (
+        {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
           <div key={day} className={styles.weekday}>
             {day}
           </div>
@@ -377,7 +423,7 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteAvailability(avail.id);
+                    handleDeleteClick(avail.id);
                   }}
                   className={styles.deleteAvailabilityBtn}
                   title="Supprimer"
@@ -458,10 +504,24 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                         )}
                         <span>{avail.user.pseudo}</span>
                       </div>
-                      <span className={`${styles.modalAvailBadge} ${styles[`type${avail.type}`]}`}>
-                        {avail.type === "AVAILABLE" ? "Disponible" : 
-                         avail.type === "VACATION" ? "Vacances" : "Occupé"}
-                      </span>
+                      <div className={styles.modalAvailRight}>
+                        <span className={`${styles.modalAvailBadge} ${styles[`type${avail.type}`]}`}>
+                          {avail.type === "AVAILABLE" ? "Disponible" : 
+                           avail.type === "VACATION" ? "Vacances" : "Occupé"}
+                        </span>
+                        {avail.userId === currentUserId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(avail.id);
+                            }}
+                            className={styles.deleteAvailabilityBtnModal}
+                            title="Supprimer"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -479,8 +539,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <label>Date de début</label>
                 <input
                   type="date"
-                  value={selectedDate?.toISOString().split("T")[0] || ""}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                  value={toLocalDateString(selectedDate)}
+                  onChange={(e) => setSelectedDate(fromLocalDateString(e.target.value))}
                   className={styles.modalInput}
                 />
               </div>
@@ -489,8 +549,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <label>Date de fin</label>
                 <input
                   type="date"
-                  value={endDate?.toISOString().split("T")[0] || ""}
-                  onChange={(e) => setEndDate(new Date(e.target.value))}
+                  value={toLocalDateString(endDate)}
+                  onChange={(e) => setEndDate(fromLocalDateString(e.target.value))}
                   className={styles.modalInput}
                 />
               </div>
@@ -530,6 +590,24 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 className={styles.modalBtnSubmit}
               >
                 {isSubmitting ? "Création..." : "Créer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={handleDeleteCancel}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Supprimer cette disponibilité ?</h3>
+            <p className={styles.confirmText}>Cette action est irréversible.</p>
+            <div className={styles.confirmButtons}>
+              <button onClick={handleDeleteCancel} className={styles.confirmCancelBtn}>
+                Annuler
+              </button>
+              <button onClick={handleDeleteConfirm} className={styles.confirmDeleteBtn}>
+                Supprimer
               </button>
             </div>
           </div>
