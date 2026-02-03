@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import Link from "next/link";
 import UserMenu from "../components/UserMenu";
+import { cleanupPastEvents } from "@/lib/cleanupEvents";
 
 function fmtTime(d: Date) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -30,6 +31,9 @@ export default async function MyEventsPage() {
   if (!meId) {
     return null;
   }
+
+  // Nettoyer les événements passés avant d'afficher la page
+  await cleanupPastEvents();
 
   const myEvents = await prisma.event.findMany({
     where: {
