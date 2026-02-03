@@ -48,6 +48,21 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
 
+  // Helper pour convertir une Date en format "YYYY-MM-DD" local (sans conversion UTC)
+  const toLocalDateString = (date: Date | null): string => {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper pour créer une Date à partir d'une chaîne "YYYY-MM-DD" en local (minuit local)
+  const fromLocalDateString = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Bloquer le scroll du body quand le modal est ouvert
   useEffect(() => {
     if (showAvailabilityModal) {
@@ -175,12 +190,19 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
 
     setIsSubmitting(true);
     try {
+      // Normaliser les dates : début à minuit, fin à 23:59:59
+      const startDateTime = new Date(selectedDate);
+      startDateTime.setHours(0, 0, 0, 0);
+      
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+
       const res = await fetch("/api/availabilities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          startDate: selectedDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: startDateTime.toISOString(),
+          endDate: endDateTime.toISOString(),
           type: availabilityType,
           note: availabilityNote || null,
         }),
@@ -494,8 +516,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <label>Date de début</label>
                 <input
                   type="date"
-                  value={selectedDate?.toISOString().split("T")[0] || ""}
-                  onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                  value={toLocalDateString(selectedDate)}
+                  onChange={(e) => setSelectedDate(fromLocalDateString(e.target.value))}
                   className={styles.modalInput}
                 />
               </div>
@@ -504,8 +526,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <label>Date de fin</label>
                 <input
                   type="date"
-                  value={endDate?.toISOString().split("T")[0] || ""}
-                  onChange={(e) => setEndDate(new Date(e.target.value))}
+                  value={toLocalDateString(endDate)}
+                  onChange={(e) => setEndDate(fromLocalDateString(e.target.value))}
                   className={styles.modalInput}
                 />
               </div>
