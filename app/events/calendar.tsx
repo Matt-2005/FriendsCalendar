@@ -74,7 +74,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+  // Ajuster pour que lundi soit le premier jour (0) au lieu de dimanche
+  const startingDayOfWeek = (firstDay.getDay() + 6) % 7;
 
   const prevMonth = () => {
     setCurrentDate(new Date(year, month - 1, 1));
@@ -316,7 +317,7 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
       </div>
 
       <div className={styles.calendarWeekdays}>
-        {["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"].map((day) => (
+        {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((day) => (
           <div key={day} className={styles.weekday}>
             {day}
           </div>
