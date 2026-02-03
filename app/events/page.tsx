@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import styles from "./page.module.css";
 import RsvpButtons from "./RsvpButtons";
 import DeleteEventButton from "./DeleteEventButton";
+import EditEventButton from "./EditEventButton";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import Calendar from "./calendar";
@@ -119,7 +120,15 @@ export default async function EventsPage() {
                   return (
                     <div key={e.id} className={styles.eventCard}>
                       {(meId === e.creatorId || userRole === "ADMIN") && (
-                        <div className={styles.eventDeleteSlot}>
+                        <div className={styles.eventActions}>
+                          <EditEventButton event={{
+                            id: e.id,
+                            title: e.title,
+                            description: e.description,
+                            location: e.location,
+                            date: e.date,
+                            endDate: e.endDate
+                          }} />
                           <DeleteEventButton eventId={e.id} />
                         </div>
                       )}

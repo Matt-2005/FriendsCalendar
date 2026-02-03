@@ -157,6 +157,7 @@
   overflow-x: hidden;
   flex: 1;
   padding-right: 10px;
+  padding-top: 5px;
   -webkit-overflow-scrolling: touch;
   min-height: 0;
 }
@@ -461,11 +462,13 @@
   border-top: 1px solid #f0f0f0;
 }
 
-.eventDeleteSlot {
+.eventActions {
   position: absolute;
   top: 15px;
   right: 15px;
   z-index: 10;
+  display: flex;
+  gap: 10px;
 }
 
 .evDeleteBtn {
