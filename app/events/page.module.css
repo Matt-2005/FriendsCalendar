@@ -456,12 +456,14 @@
   opacity: 0.8;
 }
 
-.eventActions {
+/* Footer pour les boutons RSVP en bas */
+.eventFooter {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #f0f0f0;
 }
 
+/* Actions pour les boutons Edit/Delete en haut à droite */
 .eventActions {
   position: absolute;
   top: 15px;

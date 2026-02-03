@@ -246,7 +246,7 @@ export default async function EventsPage() {
                         </div>
                       )}
 
-                      <div className={styles.eventActions}>
+                      <div className={styles.eventFooter}>
                         <RsvpButtons eventId={e.id} />
                       </div>
                     </div>
