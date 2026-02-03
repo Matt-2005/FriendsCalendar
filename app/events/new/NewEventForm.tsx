@@ -212,6 +212,7 @@ export default function NewEventForm() {
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
               className={styles.input}
+              step="300"
               required
             />
           </div>
@@ -254,6 +255,7 @@ export default function NewEventForm() {
               value={selectedEndTime}
               onChange={(e) => setSelectedEndTime(e.target.value)}
               className={styles.input}
+              step="300"
               required
             />
           </div>

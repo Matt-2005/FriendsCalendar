@@ -31,14 +31,21 @@ export default function EditEventButton({ event }: EditEventButtonProps) {
   const [time, setTime] = useState(
     new Date(event.date).toISOString().split("T")[1].substring(0, 5)
   );
-  const [isMultiDay, setIsMultiDay] = useState(!!event.endDate);
+  
+  // Initialiser endDate et endTime avec une valeur par défaut si null
   const [endDate, setEndDate] = useState(
-    event.endDate ? new Date(event.endDate).toISOString().split("T")[0] : ""
+    event.endDate 
+      ? new Date(event.endDate).toISOString().split("T")[0] 
+      : new Date(event.date).toISOString().split("T")[0]
   );
   const [endTime, setEndTime] = useState(
     event.endDate
       ? new Date(event.endDate).toISOString().split("T")[1].substring(0, 5)
-      : ""
+      : (() => {
+          const d = new Date(event.date);
+          d.setHours(d.getHours() + 2); // +2 heures par défaut
+          return d.toISOString().split("T")[1].substring(0, 5);
+        })()
   );
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,15 +54,20 @@ export default function EditEventButton({ event }: EditEventButtonProps) {
     setError("");
 
     const dateTime = new Date(`${date}T${time}`);
-    let endDateTime = null;
+    
+    // Vérifier que endDate et endTime sont définis
+    if (!endDate || !endTime) {
+      setError("Veuillez renseigner la date et l'heure de fin");
+      setLoading(false);
+      return;
+    }
 
-    if (isMultiDay && endDate && endTime) {
-      endDateTime = new Date(`${endDate}T${endTime}`);
-      if (endDateTime <= dateTime) {
-        setError("La date de fin doit être après la date de début");
-        setLoading(false);
-        return;
-      }
+    const endDateTime = new Date(`${endDate}T${endTime}`);
+    
+    if (endDateTime <= dateTime) {
+      setError("La date de fin doit être après la date de début");
+      setLoading(false);
+      return;
     }
 
     try {
@@ -67,7 +79,7 @@ export default function EditEventButton({ event }: EditEventButtonProps) {
           description,
           location,
           date: dateTime.toISOString(),
-          endDate: endDateTime ? endDateTime.toISOString() : null,
+          endDate: endDateTime.toISOString(),
         }),
       });
 
@@ -143,7 +155,13 @@ export default function EditEventButton({ event }: EditEventButtonProps) {
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      // Mettre à jour la date de fin si elle devient invalide
+                      if (endDate && new Date(e.target.value) > new Date(endDate)) {
+                        setEndDate(e.target.value);
+                      }
+                    }}
                     required
                     className={styles.input}
                   />
@@ -152,43 +170,33 @@ export default function EditEventButton({ event }: EditEventButtonProps) {
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
                     required
+                    step="300"
                     className={styles.input}
                   />
                 </div>
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.checkboxLabel}>
+                <label>Date et heure de fin *</label>
+                <div className={styles.dateTimeRow}>
                   <input
-                    type="checkbox"
-                    checked={isMultiDay}
-                    onChange={(e) => setIsMultiDay(e.target.checked)}
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={date}
+                    required
+                    className={styles.input}
                   />
-                  Événement sur plusieurs jours
-                </label>
-              </div>
-
-              {isMultiDay && (
-                <div className={styles.formGroup}>
-                  <label>Date et heure de fin *</label>
-                  <div className={styles.dateTimeRow}>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      required={isMultiDay}
-                      className={styles.input}
-                    />
-                    <input
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      required={isMultiDay}
-                      className={styles.input}
-                    />
-                  </div>
+                  <input
+                    type="time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    required
+                    step="300"
+                    className={styles.input}
+                  />
                 </div>
-              )}
+              </div>
 
               <div className={styles.modalFooter}>
                 <button
