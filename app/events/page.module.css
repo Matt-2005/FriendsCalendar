@@ -272,8 +272,20 @@
   font-size: 1.3rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   line-height: 1.3;
+}
+
+.eventCreator {
+  font-size: 0.85rem;
+  color: #667eea;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.eventCreator strong {
+  font-weight: 700;
+  color: #764ba2;
 }
 
 .eventMeta {
@@ -1135,6 +1147,134 @@
 .deleteAvailabilityBtn:hover {
   background: #d32f2f;
   transform: scale(1.1);
+}
+
+/* MODAL SECTIONS */
+.modalEventsSection,
+.modalAvailabilitiesSection {
+  margin-bottom: 20px;
+}
+
+.modalSectionTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 15px 0;
+}
+
+.modalEventCard {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.modalEventHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.modalEventStatus {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.statusYes {
+  background: #4caf50;
+  color: white;
+}
+
+.statusNo {
+  background: #f44336;
+  color: white;
+}
+
+.statusPending {
+  background: #ff9800;
+  color: white;
+}
+
+.modalEventTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  flex: 1;
+}
+
+.modalEventDesc {
+  font-size: 0.9rem;
+  color: #555;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.modalEventMeta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 8px;
+}
+
+.modalAvailabilityItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.modalAvailUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modalAvailAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.modalAvailAvatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.modalAvailBadge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.modalDivider {
+  height: 2px;
+  background: #e0e0e0;
+  margin: 25px 0;
+  border-radius: 1px;
 }
 
 /* MODAL */

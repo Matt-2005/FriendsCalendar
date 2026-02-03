@@ -23,6 +23,9 @@ export default async function EventsPage() {
     select: {
       id: true, title: true, date: true, endDate: true, location: true, description: true,
       creatorId: true,
+      creator: {
+        select: { id: true, pseudo: true, avatarUrl: true }
+      },
       rsvps: {
         select: { 
           status: true,
@@ -119,6 +122,9 @@ export default async function EventsPage() {
 
                         <div className={styles.eventInfo}>
                           <h3 className={styles.eventTitle}>{e.title}</h3>
+                          <div className={styles.eventCreator}>
+                            👤 Organisé par <strong>{e.creator.pseudo}</strong>
+                          </div>
                           <div className={styles.eventMeta}>
                             <span className={styles.eventTime}>
                               🕐 {fmtTime(e.date)}

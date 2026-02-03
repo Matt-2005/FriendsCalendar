@@ -159,6 +159,16 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
     setShowAvailabilityModal(true);
   };
 
+  const getSelectedDayEvents = () => {
+    if (!selectedDate) return [];
+    return getEventsForDay(selectedDate.getDate());
+  };
+
+  const getSelectedDayAvailabilities = () => {
+    if (!selectedDate) return [];
+    return getAvailabilitiesForDay(selectedDate.getDate());
+  };
+
   const handleCreateAvailability = async () => {
     if (!selectedDate || !endDate || !currentUserId) return;
 
@@ -380,16 +390,91 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
         </div>
       )}
 
-      {/* Modal pour créer une disponibilité */}
+      {/* Modal pour voir les événements et créer une disponibilité */}
       {showAvailabilityModal && (
         <div className={styles.modalOverlay} onClick={() => setShowAvailabilityModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h3>Ajouter une disponibilité</h3>
+              <h3>
+                {selectedDate?.toLocaleDateString("fr-FR", { 
+                  weekday: "long", 
+                  day: "numeric", 
+                  month: "long" 
+                })}
+              </h3>
               <button onClick={() => setShowAvailabilityModal(false)} className={styles.modalClose}>×</button>
             </div>
             
             <div className={styles.modalBody}>
+              {/* Section des événements */}
+              {getSelectedDayEvents().length > 0 && (
+                <div className={styles.modalEventsSection}>
+                  <h4 className={styles.modalSectionTitle}>📅 Événements du jour</h4>
+                  {getSelectedDayEvents().map((event) => {
+                    const status = getUserRSVPStatus(event);
+                    return (
+                      <div key={event.id} className={styles.modalEventCard}>
+                        <div className={styles.modalEventHeader}>
+                          <span className={`${styles.modalEventStatus} ${
+                            status === "YES" ? styles.statusYes : 
+                            status === "NO" ? styles.statusNo : 
+                            styles.statusPending
+                          }`}>
+                            {status === "YES" ? "✓" : status === "NO" ? "✗" : "?"}
+                          </span>
+                          <h5 className={styles.modalEventTitle}>{event.title}</h5>
+                        </div>
+                        {event.description && (
+                          <p className={styles.modalEventDesc}>{event.description}</p>
+                        )}
+                        <div className={styles.modalEventMeta}>
+                          {event.location && <span>📍 {event.location}</span>}
+                          <span>
+                            🕐 {new Date(event.date).toLocaleTimeString("fr-FR", { 
+                              hour: "2-digit", 
+                              minute: "2-digit" 
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Section des disponibilités du jour */}
+              {getSelectedDayAvailabilities().length > 0 && (
+                <div className={styles.modalAvailabilitiesSection}>
+                  <h4 className={styles.modalSectionTitle}>👥 Disponibilités</h4>
+                  {getSelectedDayAvailabilities().map((avail) => (
+                    <div key={avail.id} className={styles.modalAvailabilityItem}>
+                      <div className={styles.modalAvailUser}>
+                        {avail.user.avatarUrl ? (
+                          <img src={avail.user.avatarUrl} alt={avail.user.pseudo} className={styles.modalAvailAvatar} />
+                        ) : (
+                          <div className={styles.modalAvailAvatarPlaceholder}>
+                            {avail.user.pseudo[0]?.toUpperCase() ?? "?"}
+                          </div>
+                        )}
+                        <span>{avail.user.pseudo}</span>
+                      </div>
+                      <span className={`${styles.modalAvailBadge} ${styles[`type${avail.type}`]}`}>
+                        {avail.type === "AVAILABLE" ? "Disponible" : 
+                         avail.type === "VACATION" ? "Vacances" : "Occupé"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Séparateur */}
+              {(getSelectedDayEvents().length > 0 || getSelectedDayAvailabilities().length > 0) && (
+                <div className={styles.modalDivider}></div>
+              )}
+
+              {/* Formulaire pour ajouter une disponibilité */}
+              <h4 className={styles.modalSectionTitle}>➕ Ajouter une disponibilité</h4>
+              
               <div className={styles.formGroup}>
                 <label>Date de début</label>
                 <input
