@@ -113,6 +113,11 @@ export default async function MyEventsPage() {
                           isPast ? styles.eventDatePast : ""
                         }`}
                       >
+                        <div className={styles.eventWeekday}>
+                          {new Intl.DateTimeFormat("fr-FR", {
+                            weekday: "short",
+                          }).format(eventDate)}
+                        </div>
                         <div className={styles.eventDay}>
                           {eventDate.getDate()}
                         </div>

@@ -116,6 +116,9 @@ export default async function EventsPage() {
 
                       <div className={styles.eventCardHeader}>
                         <div className={styles.eventDate}>
+                          <div className={styles.eventWeekday}>
+                            {new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(new Date(e.date))}
+                          </div>
                           <div className={styles.eventDay}>
                             {new Date(e.date).getDate()}
                           </div>
