@@ -459,10 +459,24 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                         )}
                         <span>{avail.user.pseudo}</span>
                       </div>
-                      <span className={`${styles.modalAvailBadge} ${styles[`type${avail.type}`]}`}>
-                        {avail.type === "AVAILABLE" ? "Disponible" : 
-                         avail.type === "VACATION" ? "Vacances" : "Occupé"}
-                      </span>
+                      <div className={styles.modalAvailRight}>
+                        <span className={`${styles.modalAvailBadge} ${styles[`type${avail.type}`]}`}>
+                          {avail.type === "AVAILABLE" ? "Disponible" : 
+                           avail.type === "VACATION" ? "Vacances" : "Occupé"}
+                        </span>
+                        {avail.userId === currentUserId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAvailability(avail.id);
+                            }}
+                            className={styles.deleteAvailabilityBtnModal}
+                            title="Supprimer"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
