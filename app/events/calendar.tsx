@@ -155,14 +155,23 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   };
 
   const getAvailabilitiesForDay = (day: number) => {
+    // Créer une date normalisée pour le jour courant (minuit local)
     const currentDayDate = new Date(year, month, day);
+    currentDayDate.setHours(0, 0, 0, 0);
+    const currentDayTimestamp = currentDayDate.getTime();
+    
     return availabilities.filter((avail) => {
-      const start = new Date(avail.startDate);
-      const end = new Date(avail.endDate);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-      currentDayDate.setHours(12, 0, 0, 0);
-      return currentDayDate >= start && currentDayDate <= end;
+      // Extraire les dates sans se soucier des heures/timezone
+      const startDate = new Date(avail.startDate);
+      const startNormalized = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const startTimestamp = startNormalized.getTime();
+      
+      const endDate = new Date(avail.endDate);
+      const endNormalized = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      const endTimestamp = endNormalized.getTime();
+      
+      // Vérifier si le jour courant est entre le début et la fin (inclus)
+      return currentDayTimestamp >= startTimestamp && currentDayTimestamp <= endTimestamp;
     });
   };
 
