@@ -47,6 +47,8 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [availabilityToDelete, setAvailabilityToDelete] = useState<number | null>(null);
 
   // Helper pour convertir une Date en format "YYYY-MM-DD" local (sans conversion UTC)
   const toLocalDateString = (date: Date | null): string => {
@@ -232,15 +234,22 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
     }
   };
 
-  const handleDeleteAvailability = async (id: number) => {
-    if (!confirm("Supprimer cette disponibilité ?")) return;
+  const handleDeleteClick = (id: number) => {
+    setAvailabilityToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!availabilityToDelete) return;
 
     try {
-      const res = await fetch(`/api/availabilities/${id}`, {
+      const res = await fetch(`/api/availabilities/${availabilityToDelete}`, {
         method: "DELETE",
       });
 
       if (res.ok) {
+        setShowDeleteConfirm(false);
+        setAvailabilityToDelete(null);
         window.location.reload();
       } else {
         alert("Erreur lors de la suppression");
@@ -249,6 +258,11 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
       console.error("Error deleting availability:", error);
       alert("Erreur lors de la suppression");
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setAvailabilityToDelete(null);
   };
 
   const days = [];
@@ -409,7 +423,7 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteAvailability(avail.id);
+                    handleDeleteClick(avail.id);
                   }}
                   className={styles.deleteAvailabilityBtn}
                   title="Supprimer"
@@ -499,7 +513,7 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteAvailability(avail.id);
+                              handleDeleteClick(avail.id);
                             }}
                             className={styles.deleteAvailabilityBtnModal}
                             title="Supprimer"
@@ -576,6 +590,24 @@ export default function Calendar({ events, availabilities, currentUserId }: Cale
                 className={styles.modalBtnSubmit}
               >
                 {isSubmitting ? "Création..." : "Créer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteConfirm && (
+        <div className={styles.modalOverlay} onClick={handleDeleteCancel}>
+          <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.confirmTitle}>Supprimer cette disponibilité ?</h3>
+            <p className={styles.confirmText}>Cette action est irréversible.</p>
+            <div className={styles.confirmButtons}>
+              <button onClick={handleDeleteCancel} className={styles.confirmCancelBtn}>
+                Annuler
+              </button>
+              <button onClick={handleDeleteConfirm} className={styles.confirmDeleteBtn}>
+                Supprimer
               </button>
             </div>
           </div>

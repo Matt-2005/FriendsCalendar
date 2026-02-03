@@ -1559,6 +1559,71 @@
   }
 }
 
+/* MODAL DE CONFIRMATION DE SUPPRESSION */
+.confirmModal {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+}
+
+.confirmTitle {
+  margin: 0 0 15px 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.confirmText {
+  margin: 0 0 25px 0;
+  font-size: 0.95rem;
+  color: #666;
+  text-align: center;
+}
+
+.confirmButtons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.confirmCancelBtn,
+.confirmDeleteBtn {
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.confirmCancelBtn {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.confirmCancelBtn:hover {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.confirmDeleteBtn {
+  background: #f44336;
+  color: white;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.confirmDeleteBtn:hover {
+  background: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
 @media (max-width: 480px) {
   .modalOverlay {
     padding: 0;
