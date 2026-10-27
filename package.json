@@ -4,14 +4,14 @@
   "private": true,
   "description": "Agenda partagé du groupe Les Indécis : sorties, réponses et dispos.",
   "engines": {
-    "node": ">=20.9"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:db": "bash scripts/dev-db.sh",
     "dev:reset": "bash scripts/dev-db.sh reset",
     "dev:stop": "bash scripts/dev-db.sh stop",
-    "build": "prisma migrate deploy && next build --turbopack",
+    "build": "bash scripts/build.sh",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -19,7 +19,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "6.19.3",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "ical-generator": "^9.0.0",
@@ -40,7 +40,7 @@
     "@types/web-push": "^3.6.4",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.28",
-    "prisma": "^6.16.2",
+    "prisma": "6.19.3",
     "tsx": "^4.20.5",
     "typescript": "^5"
   }

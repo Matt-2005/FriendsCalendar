@@ -6,9 +6,23 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
-      # Une seule demande regroupée pour les petites mises à jour
+      # L'outil Prisma et sa bibliothèque doivent TOUJOURS avoir la même version
+      prisma:
+        patterns: ["prisma", "@prisma/*"]
+      # React et React DOM vont ensemble
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      # Next.js et sa config ESLint vont ensemble
+      next:
+        patterns: ["next", "eslint-config-next"]
+      # Le reste des petites mises à jour, regroupé en une seule demande
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Les versions majeures (Next 16, Prisma 7, TypeScript 7…) changent le code à écrire :
+      # elles se font à la main, pas automatiquement
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
