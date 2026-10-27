@@ -6,9 +6,14 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     groups:
-      # Une seule demande regroupée pour les petites mises à jour
+      # Une seule demande regroupée pour les petites mises à jour (sans risque)
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # Les versions majeures (Next 16, Prisma 7, TypeScript 7…) changent le code à écrire :
+      # elles se font à la main, pas automatiquement
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

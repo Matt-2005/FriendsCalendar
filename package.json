@@ -11,7 +11,7 @@
     "dev:db": "bash scripts/dev-db.sh",
     "dev:reset": "bash scripts/dev-db.sh reset",
     "dev:stop": "bash scripts/dev-db.sh stop",
-    "build": "prisma migrate deploy && next build --turbopack",
+    "build": "bash scripts/build.sh",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

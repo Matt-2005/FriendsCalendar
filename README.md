@@ -90,7 +90,7 @@ npm run dev        # puis ouvre http://localhost:3000/login
 - Connexion Google en local : ajoute `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.development.local`, et déclare `http://localhost:3000/api/auth/callback/google` chez Google.
 - Prévisualiser un thème de saison : `SEASON_OVERRIDE=noel npm run dev` (`halloween`, `noel`, `nouvel-an`, `ete` ou `none`).
 
-`npm run build` applique d'abord les migrations Prisma sur la base indiquée par `DATABASE_URL`, puis compile l'appli. Ne le lance pas sur ton Mac avec le `.env` de production.
+`npm run build` compile l'appli. Les migrations Prisma ne s'appliquent que lors du déploiement de **production** sur Vercel (`VERCEL_ENV=production`) : jamais pour les aperçus, la CI ou ton Mac (voir `scripts/build.sh`).
 
 ## Thèmes de saison
 

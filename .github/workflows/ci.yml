@@ -25,6 +25,6 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      # "next build" seul : on ne lance surtout pas les migrations depuis la CI
-      - run: npx next build --turbopack
+      # Sans VERCEL_ENV=production, le script ne lance pas les migrations
+      - run: npm run build
       - run: npm audit --omit=dev --audit-level=critical
