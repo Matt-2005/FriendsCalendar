@@ -135,3 +135,32 @@ export async function getAvailabilities(from: Date, to: Date): Promise<Availabil
     user: a.user,
   }));
 }
+
+/** Raccourcis pour le champ "Où ?" : chez chaque membre + lieux récents */
+export async function getPlaceSuggestions(meId: number) {
+  const [members, recentRows] = await Promise.all([
+    getMembers(),
+    prisma.event.findMany({
+      where: { location: { not: "" } },
+      select: { location: true },
+      orderBy: { date: "desc" },
+      take: 40,
+    }),
+  ]);
+  const hosts = [
+    ...members.filter((m) => m.id === meId).map((m) => ({ id: m.id, pseudo: m.pseudo, isMe: true })),
+    ...members.filter((m) => m.id !== meId).map((m) => ({ id: m.id, pseudo: m.pseudo, isMe: false })),
+  ];
+  // Les "Chez X" sont déjà proposés au-dessus : on ne garde que les autres lieux, sans doublon
+  const seen = new Set<string>();
+  const recent: string[] = [];
+  for (const { location } of recentRows) {
+    const place = location.trim();
+    const key = place.toLowerCase();
+    if (!place || key.startsWith("chez ") || seen.has(key) || place.length > 40) continue;
+    seen.add(key);
+    recent.push(place);
+    if (recent.length === 4) break;
+  }
+  return { hosts, recent };
+}

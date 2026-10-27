@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { requireMe } from "@/lib/session";
-import { getEvent } from "@/lib/queries";
+import { getEvent, getPlaceSuggestions } from "@/lib/queries";
 import { toInputs } from "@/lib/dates";
 import EventForm from "../../_components/EventForm";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Modifier la sortie" };
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const me = await requireMe();
   const id = Number((await params).id);
-  const event = await getEvent(me, id);
+  const [event, places] = await Promise.all([getEvent(me, id), getPlaceSuggestions(me.id)]);
   if (!event) notFound();
   if (!event.canManage) redirect(`/events/${id}`);
 
@@ -28,6 +28,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ id: 
       </header>
       <EventForm
         eventId={id}
+        places={places}
         initial={{
           title: event.title,
           date: s.date,
