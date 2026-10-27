@@ -6,16 +6,48 @@ import Link from "next/link";
 import styles from "../auth.module.css";
 import GoogleButton, { OrSeparator } from "../components/GoogleButton";
 
+type DevUser = { id: number; pseudo: string; role: string };
+
+/** Connexion en un clic, visible seulement en local sur la base de test */
+function DevLogin({ users, callbackUrl }: { users: DevUser[]; callbackUrl: string }) {
+  const [busy, setBusy] = useState<number | null>(null);
+  async function go(id: number) {
+    setBusy(id);
+    const res = await signIn("dev-login", { userId: String(id), redirect: false });
+    if (res?.error) return setBusy(null);
+    window.location.href = callbackUrl;
+  }
+  return (
+    <div className="card" style={{ marginBottom: 16, border: "2px dashed var(--yes)" }}>
+      <div className="card-title">🧪 Mode test (base locale)</div>
+      <p className="card-text" style={{ marginBottom: 10 }}>Connecte-toi en un clic avec un pote de démo. Rien n'est envoyé en ligne.</p>
+      {users.length === 0 ? (
+        <p className="hint">Base vide : lance « npm run dev:reset ».</p>
+      ) : (
+        <div className="row-wrap">
+          {users.map((u) => (
+            <button key={u.id} type="button" className="btn btn-outline btn-sm" onClick={() => go(u.id)} disabled={busy !== null}>
+              {busy === u.id ? <span className="spinner" style={{ width: 14, height: 14 }} /> : `${u.role === "ADMIN" ? "👑 " : ""}${u.pseudo}`}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function LoginForm({
   callbackUrl,
   initialEmail,
   googleEnabled,
   initialError,
+  devUsers,
 }: {
   callbackUrl: string;
   initialEmail: string;
   googleEnabled: boolean;
   initialError: string | null;
+  devUsers?: DevUser[] | null;
 }) {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
@@ -55,6 +87,8 @@ export default function LoginForm({
         </div>
         <h1 className={styles.title}>Content de te revoir</h1>
         <p className={styles.subtitle}>Connecte-toi pour voir les prochaines sorties.</p>
+
+        {devUsers && <DevLogin users={devUsers} callbackUrl={callbackUrl} />}
 
         <form onSubmit={onSubmit} className={styles.card}>
           {googleEnabled && (

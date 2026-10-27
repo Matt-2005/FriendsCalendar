@@ -5,6 +5,7 @@ import { getPastEvents, getUpcomingEvents, type EventVM } from "@/lib/queries";
 import EventCard from "./_components/EventCard";
 import Avatar from "../../components/Avatar";
 import NotificationsCard from "../../components/NotificationsCard";
+import { currentSeason, seasonalGreeting } from "@/lib/season";
 
 export const metadata: Metadata = { title: "Sorties" };
 
@@ -16,11 +17,6 @@ const FILTERS = [
   { key: "past", label: "Passées" },
 ] as const;
 type FilterKey = (typeof FILTERS)[number]["key"];
-
-function greeting() {
-  const h = Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hour12: false, timeZone: "Europe/Paris" }).format(new Date()));
-  return h >= 18 || h < 5 ? "Bonsoir" : "Salut";
-}
 
 export default async function EventsPage({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
   const me = await requireMe();
@@ -42,7 +38,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
       <header className="page-header">
         <div>
           <h1 className="page-title">
-            {greeting()} {me.pseudo} 👋
+            {seasonalGreeting(me.pseudo, currentSeason())}
           </h1>
           <p className="page-subtitle">
             {upcoming.length === 0

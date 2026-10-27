@@ -7,12 +7,17 @@ import CalendarSync from "./CalendarSync";
 import PasswordForm from "./PasswordForm";
 import LogoutButton from "./LogoutButton";
 import MembersAdmin from "./MembersAdmin";
+import DecoToggle from "./DecoToggle";
+import { cookies } from "next/headers";
+import { currentSeason, DECO_COOKIE } from "@/lib/season";
 import NotificationsCard from "../../components/NotificationsCard";
 
 export const metadata: Metadata = { title: "Profil" };
 
 export default async function AccountPage() {
   const me = await requireMe();
+  const season = currentSeason();
+  const decoOn = (await cookies()).get(DECO_COOKIE)?.value !== "off";
   const [{ calendarToken, passwordHash }, baseUrl, members] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: me.id }, select: { calendarToken: true, passwordHash: true } }),
     getBaseUrl(),
@@ -50,6 +55,13 @@ export default async function AccountPage() {
           <NotificationsCard variant="settings" />
         </div>
       </section>
+      )}
+
+      {season && (
+        <section className="section">
+          <h2 className="section-title">✨ Ambiance</h2>
+          <DecoToggle enabled={decoOn} label={`de ${season.label}`} emoji={season.emoji} />
+        </section>
       )}
 
       <section className="section" id="agenda">

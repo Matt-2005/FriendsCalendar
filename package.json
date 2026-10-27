@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:db": "bash scripts/dev-db.sh",
+    "dev:reset": "bash scripts/dev-db.sh reset",
+    "dev:stop": "bash scripts/dev-db.sh stop",
     "build": "prisma migrate deploy && next build --turbopack",
     "start": "next start",
     "postinstall": "prisma generate"

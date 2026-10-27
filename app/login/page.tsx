@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getMe } from "@/lib/session";
-import { googleEnabled } from "@/lib/authOptions";
+import { devLoginEnabled, googleEnabled } from "@/lib/authOptions";
+import { prisma } from "@/lib/prisma";
 import LoginForm from "./LoginForm";
 
 export const metadata: Metadata = { title: "Connexion" };
@@ -27,5 +28,16 @@ export default async function Page({
   const callbackUrl = safeCallback(params.callbackUrl);
   if (await getMe()) redirect(callbackUrl);
   const error = params.error && params.error !== "CredentialsSignin" ? ERRORS[params.error] ?? "La connexion a échoué, réessaie." : null;
-  return <LoginForm callbackUrl={callbackUrl} initialEmail={params.email ?? ""} googleEnabled={googleEnabled} initialError={error} />;
+  const devUsers = devLoginEnabled
+    ? await prisma.user.findMany({ select: { id: true, pseudo: true, role: true }, orderBy: [{ role: "asc" }, { pseudo: "asc" }] })
+    : null;
+  return (
+    <LoginForm
+      callbackUrl={callbackUrl}
+      initialEmail={params.email ?? ""}
+      googleEnabled={googleEnabled}
+      initialError={error}
+      devUsers={devUsers}
+    />
+  );
 }
