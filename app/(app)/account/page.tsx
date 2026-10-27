@@ -27,8 +27,20 @@ export default async function AccountPage() {
         <h1 className="page-title">Profil</h1>
       </header>
 
-      <AccountForm initialEmail={me.email} initialPseudo={me.pseudo} initialAvatarUrl={me.avatarUrl ?? ""} />
+      {me.simulatedBy && (
+        <div className="alert alert-info" style={{ marginBottom: 16 }}>
+          👀 Tu modifies le profil de {me.pseudo}. Les notifications et le mot de passe restent ceux de ton téléphone : ils sont masqués ici.
+        </div>
+      )}
 
+      <AccountForm
+        initialEmail={me.email}
+        initialPseudo={me.pseudo}
+        initialAvatarUrl={me.avatarUrl ?? ""}
+        simulating={Boolean(me.simulatedBy)}
+      />
+
+      {!me.simulatedBy && (
       <section className="section">
         <h2 className="section-title">🔔 Notifications</h2>
         <div className="card">
@@ -38,16 +50,19 @@ export default async function AccountPage() {
           <NotificationsCard variant="settings" />
         </div>
       </section>
+      )}
 
       <section className="section" id="agenda">
         <h2 className="section-title">📅 Mon agenda de téléphone</h2>
         <CalendarSync baseUrl={baseUrl} initialToken={calendarToken} />
       </section>
 
-      <section className="section">
-        <h2 className="section-title">🔒 Sécurité</h2>
-        <PasswordForm hasPassword={Boolean(passwordHash)} />
-      </section>
+      {!me.simulatedBy && (
+        <section className="section">
+          <h2 className="section-title">🔒 Sécurité</h2>
+          <PasswordForm hasPassword={Boolean(passwordHash)} />
+        </section>
+      )}
 
       {me.role === "ADMIN" && (
         <section className="section">
@@ -56,9 +71,11 @@ export default async function AccountPage() {
         </section>
       )}
 
-      <section className="section">
-        <LogoutButton />
-      </section>
+      {!me.simulatedBy && (
+        <section className="section">
+          <LogoutButton />
+        </section>
+      )}
     </main>
   );
 }

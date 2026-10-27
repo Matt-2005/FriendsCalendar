@@ -12,10 +12,12 @@ export default function AccountForm({
   initialEmail,
   initialPseudo,
   initialAvatarUrl,
+  simulating = false,
 }: {
   initialEmail: string;
   initialPseudo: string;
   initialAvatarUrl: string;
+  simulating?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -45,7 +47,7 @@ export default function AccountForm({
       setErr((await res?.json().catch(() => ({})))?.error ?? "Pas de connexion");
       return;
     }
-    await updateSession({ name: pseudo.trim(), email: email.trim().toLowerCase() });
+    if (!simulating) await updateSession({ name: pseudo.trim(), email: email.trim().toLowerCase() });
     toast("Profil enregistré ✓");
     router.refresh();
   }
@@ -71,7 +73,7 @@ export default function AccountForm({
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j.error);
       setAvatarUrl(j.url);
-      await updateSession({ avatarUrl: j.url });
+      if (!simulating) await updateSession({ avatarUrl: j.url });
       toast("Photo mise à jour ✓");
       router.refresh();
     } catch (e: any) {

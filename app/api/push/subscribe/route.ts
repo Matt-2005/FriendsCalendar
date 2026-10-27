@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getMeId } from "@/lib/session";
+import { getRealMeId } from "@/lib/session";
 
 export const runtime = "nodejs";
 
 // Enregistre l'appareil pour recevoir les notifications
 export async function POST(req: Request) {
-  const meId = await getMeId();
+  const meId = await getRealMeId();
   if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const sub = await req.json().catch(() => null);
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const meId = await getMeId();
+  const meId = await getRealMeId();
   if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
   const body = await req.json().catch(() => null);
   if (body?.endpoint) {
