@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Un onglet déjà visité se rouvre instantanément pendant 30 s (puis se met à jour)
+    staleTimes: { dynamic: 30, static: 180 },
+  },
   async redirects() {
     return [{ source: "/my-events", destination: "/events?f=mine", permanent: false }];
   },

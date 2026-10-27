@@ -454,6 +454,15 @@ input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-dat
 .details[open] summary::after { transform: rotate(90deg); }
 .details p { padding-bottom: 14px; font-size: 14.5px; color: var(--muted); }
 
+/* ===== Squelette de chargement ===== */
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.1s linear infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
 /* ===== Séparateur "ou" ===== */
 .or-sep { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--subtle); font-size: 14px; font-weight: 600; }
 .or-sep::before, .or-sep::after { content: ""; flex: 1; height: 1px; background: var(--border); }
