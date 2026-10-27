@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "./prisma";
 import { eventEmoji } from "./eventEmoji";
 import type { Me } from "./session";
@@ -89,15 +90,18 @@ export async function getEventsBetween(me: Me, from: Date, to: Date) {
   return rows.map((e) => toVM(e, me));
 }
 
+// cache() : une seule requête par affichage, même si le titre de la page et la page la demandent
+const getEventRow = cache(async (id: number) => (await fetchRows({ id }, "asc", 1))[0] ?? null);
+
 export async function getEvent(me: Me, id: number) {
   if (!Number.isInteger(id)) return null;
-  const rows = await fetchRows({ id }, "asc", 1);
-  return rows[0] ? toVM(rows[0], me) : null;
+  const row = await getEventRow(id);
+  return row ? toVM(row, me) : null;
 }
 
-export async function getMembers(): Promise<UserVM[]> {
-  return prisma.user.findMany({ select: userSelect, orderBy: { pseudo: "asc" } });
-}
+export const getMembers = cache(async (): Promise<UserVM[]> =>
+  prisma.user.findMany({ select: userSelect, orderBy: { pseudo: "asc" } })
+);
 
 export async function countPendingFor(meId: number) {
   return prisma.event.count({

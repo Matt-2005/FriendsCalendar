@@ -10,7 +10,7 @@ export type PushPayload = {
 
 const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 const privateKey = process.env.VAPID_PRIVATE_KEY;
-const subject = process.env.VAPID_SUBJECT || "https://calender.matthewle.fr";
+const subject = process.env.VAPID_SUBJECT || "https://calendar.matthewle.fr";
 
 export const pushEnabled = Boolean(publicKey && privateKey);
 

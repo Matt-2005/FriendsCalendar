@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const Icon = {
   home: (
@@ -36,29 +37,34 @@ const Icon = {
 };
 
 export default function BottomNav({ pendingCount }: { pendingCount: number }) {
-  const path = usePathname();
+  const realPath = usePathname();
+  // Onglet touché : on l'allume tout de suite, sans attendre que la page arrive
+  const [pending, setPending] = useState<string | null>(null);
+  useEffect(() => setPending(null), [realPath]);
+  const path = pending ?? realPath;
   const is = (p: string) => (p === "/events" ? path === "/events" || /^\/events\/\d+/.test(path) : path.startsWith(p));
+  const cur = (p: string) => (is(p) ? ("page" as const) : undefined);
 
   return (
     <nav className="bottom-nav" aria-label="Navigation principale">
       <div className="bottom-nav-inner">
-        <Link href="/events" className="nav-item" aria-current={is("/events") ? "page" : undefined}>
+        <Link href="/events" className="nav-item" aria-current={cur("/events")} onClick={() => setPending("/events")}>
           {Icon.home}
           Sorties
           {pendingCount > 0 && <span className="nav-dot">{pendingCount}</span>}
         </Link>
-        <Link href="/calendar" className="nav-item" aria-current={is("/calendar") ? "page" : undefined}>
+        <Link href="/calendar" className="nav-item" aria-current={cur("/calendar")} onClick={() => setPending("/calendar")}>
           {Icon.calendar}
           Calendrier
         </Link>
-        <Link href="/events/new" className="nav-item" aria-label="Proposer une sortie">
+        <Link href="/events/new" className="nav-item" aria-label="Proposer une sortie" onClick={() => setPending("/events/new")}>
           <span className="nav-create">{Icon.plus}</span>
         </Link>
-        <Link href="/dispos" className="nav-item" aria-current={is("/dispos") ? "page" : undefined}>
+        <Link href="/dispos" className="nav-item" aria-current={cur("/dispos")} onClick={() => setPending("/dispos")}>
           {Icon.dispo}
           Mes dispos
         </Link>
-        <Link href="/account" className="nav-item" aria-current={is("/account") ? "page" : undefined}>
+        <Link href="/account" className="nav-item" aria-current={cur("/account")} onClick={() => setPending("/account")}>
           {Icon.profile}
           Profil
         </Link>

@@ -19,11 +19,11 @@ Une appli web pensée pour le téléphone qui aide un groupe de potes à s'organ
 | --- | --- |
 | `DATABASE_URL` | Base PostgreSQL (Prisma) |
 | `NEXTAUTH_SECRET` | Clé de chiffrement des sessions |
-| `NEXTAUTH_URL` | Adresse publique du site, ex. `https://calender.matthewle.fr` |
+| `NEXTAUTH_URL` | Adresse publique du site, ex. `https://calendar.matthewle.fr` |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Photos de profil |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Notifications push. Générer avec `npx web-push generate-vapid-keys` |
 | `CRON_SECRET` | Protège la tâche quotidienne `/api/cron/reminders` |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Bouton « Continuer avec Google » (masqué si absentes). Adresse de retour à déclarer chez Google : `https://calender.matthewle.fr/api/auth/callback/google` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Bouton « Continuer avec Google » (masqué si absentes). Adresse de retour à déclarer chez Google : `https://calendar.matthewle.fr/api/auth/callback/google` |
 
 Sans les clés VAPID, l'appli fonctionne normalement, simplement sans notifications.
 
