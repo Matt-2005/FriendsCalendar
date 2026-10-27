@@ -1,5 +1,6 @@
 // Petit emoji automatique selon le titre, pour repérer les sorties d'un coup d'œil.
 const RULES: [RegExp, string][] = [
+  [/halloween|citrouille|horreur|zombie|sorci[èe]re|d[ée]guis/i, "🎃"],
   [/anniv|birthday/i, "🎂"],
   [/resto|restaurant|d[îi]ner|d[ée]j|brunch|pizza|burger|sushi|repas|bouffe|manger/i, "🍽️"],
   [/ap[ée]ro|bar\b|bi[èe]re|verre|pinte|cocktail|vin\b/i, "🍻"],

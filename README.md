@@ -33,12 +33,34 @@ Sans les clés VAPID, l'appli fonctionne normalement, simplement sans notificati
 
 ## Développement
 
+### Tester en local, sans toucher à la production
+
 ```bash
 npm install
-npm run dev
+npm run dev:db     # crée/démarre une base de TEST sur ton Mac, avec 5 potes et des sorties de démo
+npm run dev        # puis ouvre http://localhost:3000/login
 ```
 
-`npm run build` applique d'abord les migrations Prisma sur la base indiquée par `DATABASE_URL`, puis compile l'appli.
+- Sur la page de connexion, un encadré **« 🧪 Mode test »** permet de se connecter en un clic avec n'importe quel pote de démo (mot de passe de tous : `demo1234`). Il n'existe qu'en local, jamais en ligne.
+- Un badge en bas à droite indique la base utilisée : vert **TEST · base locale**, ou rouge **DEV sur la base de PRODUCTION** si `.env.development.local` est absent.
+- `npm run dev:reset` remet les données de démo à zéro, `npm run dev:stop` arrête la base de test. Elle est stockée dans `~/.lesindecis-devdb` (hors iCloud).
+- Connexion Google en local : ajoute `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.development.local`, et déclare `http://localhost:3000/api/auth/callback/google` chez Google.
+- Prévisualiser un thème de saison : `SEASON_OVERRIDE=noel npm run dev` (`halloween`, `noel`, `nouvel-an`, `ete` ou `none`).
+
+`npm run build` applique d'abord les migrations Prisma sur la base indiquée par `DATABASE_URL`, puis compile l'appli. Ne le lance pas sur ton Mac avec le `.env` de production.
+
+## Thèmes de saison
+
+Couleurs et décor changent tout seuls selon la date (heure de Paris) — voir `src/lib/season.ts` :
+
+| Période | Thème |
+| --- | --- |
+| 15 oct → 2 nov | 🎃 Halloween : orange citrouille, chauves-souris, araignée, fantômes |
+| 1er → 26 déc | 🎄 Noël : rouge, neige qui tombe |
+| 27 déc → 3 janv | 🥂 Nouvel An : doré, confettis |
+| juillet → août | ☀️ Été : turquoise, soleil |
+
+Le reste de l'année, le thème violet habituel. Chacun peut couper les décorations dans son Profil (« Ambiance »). Les animations s'arrêtent si le téléphone est réglé pour limiter les mouvements.
 
 ## Notifications sur iPhone
 

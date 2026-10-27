@@ -7,6 +7,12 @@ import bcrypt from "bcrypt";
 
 export const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
+/** Base de données locale (npm run dev:db) : jamais vrai en production */
+export const usingLocalDb = /@(localhost|127\.0\.0\.1)[:/]/.test(process.env.DATABASE_URL ?? "");
+
+/** Connexion en un clic pour tester : uniquement en développement ET sur la base locale */
+export const devLoginEnabled = process.env.NODE_ENV === "development" && usingLocalDb;
+
 const findByEmail = (email: string) =>
   prisma.user.findFirst({ where: { email: { equals: email.trim(), mode: "insensitive" } } });
 
@@ -32,6 +38,19 @@ export const authOptions: NextAuthOptions = {
         return { id: String(user.id), email: user.email, name: user.pseudo, image: user.avatarUrl };
       },
     }),
+    ...(devLoginEnabled
+      ? [
+          Credentials({
+            id: "dev-login",
+            name: "Test",
+            credentials: { userId: {} },
+            async authorize(credentials) {
+              const user = await prisma.user.findUnique({ where: { id: Number(credentials?.userId) } });
+              return user ? { id: String(user.id), email: user.email, name: user.pseudo, image: user.avatarUrl } : null;
+            },
+          }),
+        ]
+      : []),
     ...(googleEnabled
       ? [
           Google({

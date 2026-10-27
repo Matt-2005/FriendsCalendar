@@ -483,3 +483,138 @@ input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-dat
   background: #1b1a23; color: #fff; font-weight: 700; font-size: 13.5px;
 }
 .sim-banner + .page { padding-top: 16px; }
+
+/* ==========================================================================
+   Thèmes de saison (voir src/lib/season.ts)
+   ========================================================================== */
+
+/* 🎃 Halloween */
+:root[data-season="halloween"] {
+  --bg: #fbf4ed; --surface-2: #f6ebe1; --surface-3: #eddccd; --border: #efdfd1;
+  --primary: #c2410c; --primary-strong: #9a3412; --primary-soft: #ffe8d6; --on-primary: #fff;
+}
+/* 🎄 Noël */
+:root[data-season="noel"] {
+  --bg: #f6f6f2; --surface-2: #eef1ec; --surface-3: #e1e7df; --border: #e3e7e0;
+  --primary: #c92a2a; --primary-strong: #a51d1d; --primary-soft: #ffe3e3; --on-primary: #fff;
+}
+/* 🥂 Nouvel An */
+:root[data-season="nouvel-an"] {
+  --bg: #f8f7f2; --surface-2: #f2efe4; --surface-3: #e8e2cd; --border: #ebe5d3;
+  --primary: #a16207; --primary-strong: #854d0e; --primary-soft: #fdf1d3; --on-primary: #fff;
+}
+/* ☀️ Été */
+:root[data-season="ete"] {
+  --bg: #f2fafa; --surface-2: #e6f4f3; --surface-3: #d3ebe9; --border: #d9eceb;
+  --primary: #0f766e; --primary-strong: #115e59; --primary-soft: #d5f3f0; --on-primary: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-season="halloween"] {
+    --bg: #130f0d; --surface: #1d1714; --surface-2: #28201c; --surface-3: #352a24; --border: #362b25;
+    --primary: #ff8a3d; --primary-strong: #ffa463; --primary-soft: #3d2414; --on-primary: #1a0f08;
+  }
+  :root[data-season="noel"] {
+    --bg: #0e1311; --surface: #161e1b; --surface-2: #1f2925; --surface-3: #2a3631; --border: #2a3530;
+    --primary: #ff6b6b; --primary-strong: #ff8787; --primary-soft: #3d1a1c; --on-primary: #1a0808;
+  }
+  :root[data-season="nouvel-an"] {
+    --bg: #0e0e14; --surface: #18181f; --surface-2: #22222b; --surface-3: #2d2d38; --border: #2b2b36;
+    --primary: #f2c14e; --primary-strong: #f7d67a; --primary-soft: #3a2e10; --on-primary: #1a1405;
+  }
+  :root[data-season="ete"] {
+    --bg: #0c1415; --surface: #142021; --surface-2: #1c2b2c; --surface-3: #263839; --border: #253536;
+    --primary: #3fd6cf; --primary-strong: #6ee2dc; --primary-soft: #12393a; --on-primary: #04201f;
+  }
+}
+
+/* Calque de décoration : derrière le contenu, ne capte aucun clic */
+.decor { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+
+/* Halloween */
+.decor-web {
+  position: absolute; top: calc(var(--safe-top) - 4px); right: -4px;
+  width: 130px; height: 130px; color: color-mix(in srgb, var(--text) 18%, transparent);
+}
+.decor-spider {
+  position: absolute; top: var(--safe-top); right: 58px; font-size: 22px;
+  display: flex; flex-direction: column; align-items: center;
+  animation: spider-drop 7s ease-in-out infinite;
+}
+.decor-thread { width: 1px; height: 70px; background: color-mix(in srgb, var(--text) 25%, transparent); }
+@keyframes spider-drop { 0%, 100% { transform: translateY(-40px); } 50% { transform: translateY(30px); } }
+
+.decor-bat { position: absolute; left: -40px; opacity: 0.75; animation: bat-fly linear infinite; }
+.decor-flap { display: inline-block; animation: bat-flap 0.35s ease-in-out infinite alternate; }
+@keyframes bat-fly {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(30vw, -24px); }
+  50% { transform: translate(60vw, 12px); }
+  75% { transform: translate(90vw, -18px); }
+  100% { transform: translate(calc(100vw + 80px), 0); }
+}
+@keyframes bat-flap { from { transform: scaleY(1); } to { transform: scaleY(0.55); } }
+
+.decor-ghost {
+  position: absolute; bottom: -60px; font-size: 30px; opacity: 0;
+  animation: ghost-rise ease-in-out infinite;
+}
+@keyframes ghost-rise {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 0.45; }
+  50% { transform: translate(24px, -55vh); }
+  85% { opacity: 0.35; }
+  100% { transform: translate(-12px, -110vh); opacity: 0; }
+}
+
+/* Noël */
+.decor-flake {
+  position: absolute; top: -30px; color: #8cb8e8; opacity: 0.8;
+  animation: snow-fall linear infinite;
+}
+@media (prefers-color-scheme: dark) { .decor-flake { color: #dbe9ff; } }
+@keyframes snow-fall { to { transform: translate(var(--drift), 110vh) rotate(180deg); } }
+
+/* Nouvel An */
+.decor-confetti {
+  position: absolute; top: -20px; width: 7px; height: 12px; border-radius: 2px; opacity: 0.85;
+  animation: confetti-fall linear infinite;
+}
+@keyframes confetti-fall {
+  from { transform: translateY(0) rotate(var(--rot)); }
+  to { transform: translateY(110vh) rotate(calc(var(--rot) + 720deg)); }
+}
+
+/* Été */
+.decor-sun {
+  position: absolute; top: calc(var(--safe-top) - 30px); right: -30px; font-size: 120px; opacity: 0.25;
+  animation: spin 60s linear infinite;
+}
+
+/* Le téléphone demande moins d'animations : décor fixe */
+@media (prefers-reduced-motion: reduce) {
+  .decor * { animation: none !important; }
+  .decor-bat { left: auto; right: 20%; }
+  .decor-ghost, .decor-flake, .decor-confetti { display: none; }
+}
+
+/* Interrupteur */
+.switch {
+  position: relative; flex: none; width: 50px; height: 30px; border-radius: 999px;
+  background: var(--surface-3); transition: background-color 0.2s ease;
+}
+.switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s ease;
+}
+.switch.is-on { background: var(--yes); }
+.switch.is-on::after { transform: translateX(20px); }
+
+/* Badge d'environnement (uniquement avec npm run dev) */
+.env-badge {
+  position: fixed; right: 8px; bottom: calc(var(--nav-h) + var(--safe-bottom) + 8px); z-index: 1000;
+  padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; pointer-events: none;
+  box-shadow: var(--shadow);
+}
+.env-badge.is-test { background: #d3f9d8; color: #2b8a3e; }
+.env-badge.is-prod { background: #c92a2a; color: #fff; }
