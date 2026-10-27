@@ -16,6 +16,7 @@ datasource db {
 enum RSVPStatus {
   YES
   NO
+  MAYBE
 }
 
 enum UserRole {
@@ -36,6 +37,7 @@ model User {
   rsvps Rsvp[]
   calendarToken String @unique
   availabilities Availability[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Event {
@@ -51,6 +53,10 @@ model Event {
   creator User @relation("UserEvents", fields: [creatorId], references: [id])
   creatorId Int
   rsvps Rsvp[]
+  // Rappel "c'est aujourd'hui" déjà envoyé (évite les doublons du cron)
+  reminderSentAt DateTime?
+
+  @@index([date])
 }
 
 model Rsvp {
@@ -60,7 +66,7 @@ model Rsvp {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userID], references: [id])
-  event Event @relation(fields: [eventID], references: [id])
+  event Event @relation(fields: [eventID], references: [id], onDelete: Cascade)
 
   @@id([userID, eventID])
   @@index([eventID, status])
@@ -86,4 +92,18 @@ model Availability {
   
   @@index([userId])
   @@index([startDate, endDate])
+}
+
+// Abonnement aux notifications push (un par appareil/navigateur)
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

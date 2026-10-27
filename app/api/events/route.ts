@@ -1,77 +1,56 @@
-// app/api/events/route.ts
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cleanupPastEvents } from "@/lib/cleanupEvents";
+import { getMeId } from "@/lib/session";
+import { parseEventInput } from "@/lib/eventInput";
+import { sendPush, allUserIdsExcept } from "@/lib/push";
+import { eventWhen } from "@/lib/dates";
+import { eventEmoji } from "@/lib/eventEmoji";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number((session.user as any).id) : null;
-  if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const meId = await getMeId();
+  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const title = String(body?.title ?? "").trim();
-  const description = String(body?.description ?? "").trim();
-  const location = String(body?.location ?? "").trim();
-  const dateStr = String(body?.date ?? "");
-  const endDateStr = body?.endDate ? String(body.endDate) : null;
-  const date = new Date(dateStr);
-  const endDate = endDateStr ? new Date(endDateStr) : null;
+  const { data, error } = parseEventInput(body);
+  if (!data) return NextResponse.json({ error }, { status: 400 });
 
-  if (!title || !description || !location || isNaN(date.getTime())) {
-    return NextResponse.json({ error: "Entrées invalides" }, { status: 400 });
-  }
-
-  // Vérifier que endDate est valide si fourni
-  if (endDate && isNaN(endDate.getTime())) {
-    return NextResponse.json({ error: "Date de fin invalide" }, { status: 400 });
-  }
-
-  // Vérifier que endDate est après date
-  if (endDate && endDate <= date) {
-    return NextResponse.json({ error: "La date de fin doit être après la date de début" }, { status: 400 });
-  }
-
-  await prisma.event.create({
-    data: { 
-      title, 
-      description, 
-      location, 
-      date, 
-      endDate,
-      creatorId: userId 
+  const event = await prisma.event.create({
+    data: {
+      ...data,
+      creatorId: meId,
+      // L'organisateur participe forcément à sa propre sortie
+      rsvps: { create: { userID: meId, status: "YES" } },
     },
+    include: { creator: { select: { pseudo: true } } },
   });
 
-  return NextResponse.json({ ok: true }, { status: 201 });
+  if (body?.notify !== false) {
+    after(async () => {
+      await sendPush(await allUserIdsExcept(meId), {
+        title: `${eventEmoji(event.title)} ${event.title}`,
+        body: `${event.creator.pseudo} propose : ${eventWhen(event.date, event.endDate)}. Tu viens ?`,
+        url: `/events/${event.id}`,
+        tag: `event-${event.id}`,
+      });
+    });
+  }
+
+  return NextResponse.json({ ok: true, id: event.id }, { status: 201 });
 }
 
-// ✅ NOUVEAU: renvoie la liste d'events pour FullCalendar
+// Liste des événements à venir (utile pour d'éventuelles intégrations)
 export async function GET() {
-  // Nettoyer les événements passés avant de récupérer la liste
-  await cleanupPastEvents();
-  
+  const meId = await getMeId();
+  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+
   const rows = await prisma.event.findMany({
+    where: { OR: [{ endDate: { gte: new Date() } }, { endDate: null, date: { gte: new Date(Date.now() - 6 * 3600e3) } }] },
     orderBy: { date: "asc" },
-    take: 500,
+    take: 200,
     select: { id: true, title: true, date: true, endDate: true, description: true, location: true },
   });
-
-  const events = rows.map(e => ({
-    id: String(e.id),
-    title: e.title,
-    start: e.date.toISOString(),
-    end: e.endDate ? e.endDate.toISOString() : new Date(e.date.getTime() + 2 * 60 * 60 * 1000).toISOString(), // endDate ou 2h par défaut
-    url: `/events/${e.id}`,
-    extendedProps: {
-      description: e.description,
-      location: e.location,
-    },
-  }));
-
-  return NextResponse.json(events);
+  return NextResponse.json(rows);
 }

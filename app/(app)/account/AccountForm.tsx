@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import styles from "./account.module.css";
+import Avatar from "../../components/Avatar";
+import { useToast } from "../../components/Toast";
 import ImageCropper from "./ImageCropper";
+import styles from "./account.module.css";
 
 export default function AccountForm({
   initialEmail,
@@ -14,197 +17,116 @@ export default function AccountForm({
   initialPseudo: string;
   initialAvatarUrl: string;
 }) {
+  const router = useRouter();
+  const toast = useToast();
+  const { update: updateSession } = useSession();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState(initialEmail);
   const [pseudo, setPseudo] = useState(initialPseudo);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl);
-  const { update: updateSession } = useSession();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [msg, setMsg] = useState<{ type: "success" | "error" | "info"; text: string } | null>(
-    null
-  );
+  const [err, setErr] = useState<string | null>(null);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+
+  const dirty = email.trim() !== initialEmail || pseudo.trim() !== initialPseudo;
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null);
+    setErr(null);
     setSaving(true);
     const res = await fetch("/api/account/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, pseudo }),
-    });
+    }).catch(() => null);
     setSaving(false);
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setMsg({ type: "error", text: j.error ?? "Erreur de sauvegarde" });
+    if (!res?.ok) {
+      setErr((await res?.json().catch(() => ({})))?.error ?? "Pas de connexion");
       return;
     }
-    
-    // Mettre à jour la session NextAuth avec les nouvelles données
-    await updateSession({ name: pseudo, email: email });
-    
-    setMsg({ type: "success", text: "Modifications enregistrées avec succès !" });
+    await updateSession({ name: pseudo.trim(), email: email.trim().toLowerCase() });
+    toast("Profil enregistré ✓");
+    router.refresh();
   }
 
-  async function onFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files?.[0]) return;
-    
-    const file = e.target.files[0];
-    
-    // Vérification de la taille (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setMsg({ type: "error", text: "Fichier trop volumineux (max 10MB)" });
-      e.target.value = "";
-      return;
-    }
-    
-    // Vérification du type
-    if (!file.type.startsWith("image/")) {
-      setMsg({ type: "error", text: "Veuillez sélectionner une image" });
-      e.target.value = "";
-      return;
-    }
-    
-    // Lire le fichier et afficher le cropper
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImageToCrop(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-    
-    // Réinitialiser l'input pour permettre de sélectionner le même fichier
+  function onFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
     e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return toast("Choisis une photo");
+    if (file.size > 15 * 1024 * 1024) return toast("Photo trop lourde (15 Mo max)");
+    const reader = new FileReader();
+    reader.onload = () => setImageToCrop(reader.result as string);
+    reader.readAsDataURL(file);
   }
 
-  async function handleCropComplete(croppedBlob: Blob) {
+  async function handleCropComplete(blob: Blob) {
     setImageToCrop(null);
     setUploading(true);
-    setMsg({ type: "info", text: "Upload en cours..." });
-    
     try {
-      // Convertir le Blob en File pour avoir un nom et type correct
-      const croppedFile = new File([croppedBlob], "avatar.jpg", { 
-        type: "image/jpeg",
-        lastModified: Date.now()
-      });
-      
       const fd = new FormData();
-      fd.append("file", croppedFile);
-      
+      fd.append("file", new File([blob], "avatar.jpg", { type: "image/jpeg" }));
       const res = await fetch("/api/account/avatar", { method: "POST", body: fd });
-      
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        console.error("Erreur upload:", j);
-        setMsg({ type: "error", text: j.error ?? "Upload échoué" });
-        setUploading(false);
-        return;
-      }
-      
-    const j = await res.json();
-    setAvatarUrl(j.url);
-    
-    // Mettre à jour la session NextAuth avec le nouvel avatar
-    await updateSession({ avatarUrl: j.url });
-    
-    setMsg({ type: "success", text: "Avatar mis à jour avec succès !" });
-    } catch (error) {
-      console.error("Erreur lors de l'upload:", error);
-      setMsg({ type: "error", text: "Erreur lors de l'upload de l'image" });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error);
+      setAvatarUrl(j.url);
+      await updateSession({ avatarUrl: j.url });
+      toast("Photo mise à jour ✓");
+      router.refresh();
+    } catch (e: any) {
+      toast(e?.message || "L'envoi a échoué");
     } finally {
       setUploading(false);
     }
   }
 
-  function handleCropCancel() {
-    setImageToCrop(null);
-  }
-
-  const initial = pseudo?.[0]?.toUpperCase() || email?.[0]?.toUpperCase() || "?";
-
   return (
     <>
-      {imageToCrop && (
-        <ImageCropper
-          imageSrc={imageToCrop}
-          onCropComplete={handleCropComplete}
-          onCancel={handleCropCancel}
-        />
-      )}
+      {imageToCrop && <ImageCropper imageSrc={imageToCrop} onCropComplete={handleCropComplete} onCancel={() => setImageToCrop(null)} />}
 
-      <form onSubmit={onSave} className={styles.form}>
-        <div className={styles.avatarSection}>
-          <div className={styles.avatarPreview}>
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className={styles.avatarImage} />
-            ) : (
-              <div className={styles.avatarPlaceholder}>{initial}</div>
-            )}
+      <form onSubmit={onSave} className="card">
+        <div className={styles.avatarRow}>
+          <button type="button" className={styles.avatarButton} onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Changer ma photo">
+            <Avatar user={{ pseudo: pseudo || "?", avatarUrl: avatarUrl || null }} size={84} />
+            <span className={styles.avatarBadge}>{uploading ? <span className="spinner" style={{ width: 14, height: 14 }} /> : "📷"}</span>
+          </button>
+          <div>
+            <div className={styles.name}>{pseudo || "Sans nom"}</div>
+            <button type="button" className="btn btn-ghost btn-sm" style={{ paddingInline: 0 }} onClick={() => fileRef.current?.click()} disabled={uploading}>
+              {avatarUrl ? "Changer ma photo" : "Ajouter une photo"}
+            </button>
           </div>
-          <div className={styles.avatarInfo}>
-            <label className={styles.avatarLabel}>Photo de profil</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={onFileSelect}
-              className={styles.fileInput}
-              disabled={uploading}
-            />
-            {uploading && (
-              <p className={styles.messageInfo}>
-                <span className={styles.loading}>Upload en cours...</span>
-              </p>
-            )}
-          </div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onFileSelect} hidden />
         </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="pseudo" className={styles.label}>
-          Pseudo
-        </label>
-        <input
-          id="pseudo"
-          type="text"
-          value={pseudo}
-          onChange={(e) => setPseudo(e.target.value)}
-          className={styles.input}
-          required
-        />
-      </div>
-
-      <div className={styles.formGroup}>
-        <label htmlFor="email" className={styles.label}>
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={styles.input}
-          required
-        />
-      </div>
-
-      {msg && (
-        <div
-          className={`${styles.message} ${
-            msg.type === "success"
-              ? styles.messageSuccess
-              : msg.type === "error"
-              ? styles.messageError
-              : styles.messageInfo
-          }`}
-        >
-          {msg.text}
+        <div className="field" style={{ marginTop: 16 }}>
+          <label htmlFor="pseudo" className="label">Prénom ou pseudo</label>
+          <input id="pseudo" className="input" value={pseudo} maxLength={40} onChange={(e) => setPseudo(e.target.value)} autoComplete="nickname" />
         </div>
-      )}
+        <div className="field">
+          <label htmlFor="email" className="label">Email</label>
+          <input
+            id="email"
+            type="email"
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            inputMode="email"
+          />
+        </div>
 
-      <button type="submit" disabled={saving} className={styles.submitButton}>
-        {saving ? "Enregistrement..." : "Enregistrer les modifications"}
-      </button>
-    </form>
+        {err && <div className="alert alert-error" style={{ marginTop: 12 }}>{err}</div>}
+
+        {dirty && (
+          <button type="submit" disabled={saving || !pseudo.trim()} className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
+            {saving ? <span className="spinner" /> : "Enregistrer"}
+          </button>
+        )}
+      </form>
     </>
   );
 }

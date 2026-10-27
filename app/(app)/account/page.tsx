@@ -1,148 +1,64 @@
-// app/account/page.tsx
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import type { Metadata } from "next";
+import { requireMe } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { getBaseUrl } from "@/lib/url";
 import AccountForm from "./AccountForm";
-import Link from "next/link";
-import UserMenu from "../components/UserMenu";
-import CopyButton from "./CopyButton";
-import styles from "./account.module.css";
+import CalendarSync from "./CalendarSync";
+import PasswordForm from "./PasswordForm";
+import LogoutButton from "./LogoutButton";
+import MembersAdmin from "./MembersAdmin";
+import NotificationsCard from "../../components/NotificationsCard";
+
+export const metadata: Metadata = { title: "Profil" };
 
 export default async function AccountPage() {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (!userId) return null;
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { email: true, pseudo: true, avatarUrl: true, calendarToken: true },
-  });
-  if (!user) return null;
-
-  const httpsUrl = `https://lesindeciscalendar.fr/api/ical/${user.calendarToken}.ics`;
-  const webcalUrl = `webcal://lesindeciscalendar.fr/api/ical/${user.calendarToken}.ics`;
+  const me = await requireMe();
+  const [{ calendarToken, passwordHash }, baseUrl, members] = await Promise.all([
+    prisma.user.findUniqueOrThrow({ where: { id: me.id }, select: { calendarToken: true, passwordHash: true } }),
+    getBaseUrl(),
+    me.role === "ADMIN"
+      ? prisma.user.findMany({ select: { id: true, pseudo: true, email: true, avatarUrl: true }, orderBy: { pseudo: "asc" } })
+      : Promise.resolve([]),
+  ]);
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.headerLeft}>
-            <Link href="/events" className={styles.backLink}>
-              ← Retour aux événements
-            </Link>
-            <h1 className={styles.pageTitle}>Mon Compte</h1>
-            <p className={styles.pageSubtitle}>
-              Gérez vos informations personnelles et vos préférences
-            </p>
-          </div>
-          <UserMenu />
+    <main className="page">
+      <header className="page-header">
+        <h1 className="page-title">Profil</h1>
+      </header>
+
+      <AccountForm initialEmail={me.email} initialPseudo={me.pseudo} initialAvatarUrl={me.avatarUrl ?? ""} />
+
+      <section className="section">
+        <h2 className="section-title">🔔 Notifications</h2>
+        <div className="card">
+          <p className="card-text" style={{ marginBottom: 12 }}>
+            Sois prévenu quand un pote propose une sortie, quand elle change, et le jour J.
+          </p>
+          <NotificationsCard variant="settings" />
         </div>
+      </section>
 
-        <div className={styles.content}>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Informations personnelles</h2>
-            <p className={styles.cardSubtitle}>
-              Mettez à jour votre profil et votre photo
-            </p>
-            <AccountForm
-              initialEmail={user.email}
-              initialPseudo={user.pseudo}
-              initialAvatarUrl={user.avatarUrl ?? ""}
-            />
-          </div>
+      <section className="section" id="agenda">
+        <h2 className="section-title">📅 Mon agenda de téléphone</h2>
+        <CalendarSync baseUrl={baseUrl} initialToken={calendarToken} />
+      </section>
 
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>Abonnement au calendrier</h2>
-            <p className={styles.cardSubtitle}>
-              Tous les événements apparaissent automatiquement dans votre calendrier. Seuls les événements que vous refusez sont exclus.
-            </p>
+      <section className="section">
+        <h2 className="section-title">🔒 Sécurité</h2>
+        <PasswordForm hasPassword={Boolean(passwordHash)} />
+      </section>
 
-            <div className={styles.calendarSection}>
-              <div className={styles.subscribeButtons}>
-                <a
-                  href={webcalUrl}
-                  className={styles.subscribeBtn}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className={styles.subscribeBtnIcon}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" fill="currentColor"/>
-                    </svg>
-                  </div>
-                  <div className={styles.subscribeBtnContent}>
-                    <div className={styles.subscribeBtnTitle}>
-                      Apple Calendar / Outlook
-                    </div>
-                    <div className={styles.subscribeBtnDesc}>
-                      Cliquez pour vous abonner instantanément
-                    </div>
-                  </div>
-                  <div className={styles.subscribeBtnArrow}>→</div>
-                </a>
+      {me.role === "ADMIN" && (
+        <section className="section">
+          <h2 className="section-title">👑 Membres du groupe · {members.length}</h2>
+          <MembersAdmin members={members} meId={me.id} />
+        </section>
+      )}
 
-                <a
-                  href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(httpsUrl)}`}
-                  className={styles.subscribeBtn}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className={styles.subscribeBtnIcon}>
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z" fill="currentColor"/>
-                    </svg>
-                  </div>
-                  <div className={styles.subscribeBtnContent}>
-                    <div className={styles.subscribeBtnTitle}>
-                      Google Calendar
-                    </div>
-                    <div className={styles.subscribeBtnDesc}>
-                      S'abonner en un clic
-                    </div>
-                  </div>
-                  <div className={styles.subscribeBtnArrow}>→</div>
-                </a>
-              </div>
-
-              <div className={styles.calendarFeatures}>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>✓</span>
-                  <span>Synchronisation automatique</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>✓</span>
-                  <span>Tous les événements (sauf refus)</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>✓</span>
-                  <span>Mise à jour en temps réel</span>
-                </div>
-              </div>
-
-              <details className={styles.advancedOptions}>
-                <summary className={styles.advancedSummary}>
-                  Options avancées
-                </summary>
-                <div className={styles.advancedContent}>
-                  <div className={styles.urlSection}>
-                    <label className={styles.urlLabel}>URL du calendrier (iCal)</label>
-                    <div className={styles.urlBox}>
-                      <code className={styles.urlCode}>{httpsUrl}</code>
-                      <CopyButton url={httpsUrl} />
-                    </div>
-                  </div>
-
-                  <form action="/api/account/regenerate-calendar-token" method="post">
-                    <button type="submit" className={styles.regenerateButton}>
-                      🔄 Régénérer le lien (invalide l'ancien)
-                    </button>
-                  </form>
-                </div>
-              </details>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <section className="section">
+        <LogoutButton />
+      </section>
+    </main>
   );
 }

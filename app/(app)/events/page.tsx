@@ -1,262 +1,111 @@
-// app/events/page.tsx — Server Component
-import { prisma } from "@/lib/prisma";
-import styles from "./page.module.css";
-import RsvpButtons from "./RsvpButtons";
-import DeleteEventButton from "./DeleteEventButton";
-import EditEventButton from "./EditEventButton";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import Calendar from "./calendar";
 import Link from "next/link";
-import UserMenu from "../components/UserMenu";
-import { cleanupPastEvents } from "@/lib/cleanupEvents";
+import type { Metadata } from "next";
+import { requireMe } from "@/lib/session";
+import { getPastEvents, getUpcomingEvents, type EventVM } from "@/lib/queries";
+import EventCard from "./_components/EventCard";
+import Avatar from "../../components/Avatar";
+import NotificationsCard from "../../components/NotificationsCard";
 
-function fmtTime(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    hour: "2-digit", minute: "2-digit",
-  }).format(d);
+export const metadata: Metadata = { title: "Sorties" };
+
+const FILTERS = [
+  { key: "all", label: "Toutes" },
+  { key: "todo", label: "À répondre" },
+  { key: "going", label: "J'y vais" },
+  { key: "mine", label: "Mes sorties" },
+  { key: "past", label: "Passées" },
+] as const;
+type FilterKey = (typeof FILTERS)[number]["key"];
+
+function greeting() {
+  const h = Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hour12: false, timeZone: "Europe/Paris" }).format(new Date()));
+  return h >= 18 || h < 5 ? "Bonsoir" : "Salut";
 }
 
-export default async function EventsPage() {
-  const session = await getServerSession(authOptions);
-  const meId = session?.user?.id ? Number(session.user.id) : null;
+export default async function EventsPage({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
+  const me = await requireMe();
+  const { f } = await searchParams;
+  const filter: FilterKey = FILTERS.some((x) => x.key === f) ? (f as FilterKey) : "all";
 
-  // Récupérer le rôle de l'utilisateur
-  let userRole: string | null = null;
-  if (meId) {
-    const user = await prisma.user.findUnique({
-      where: { id: meId },
-      select: { role: true }
-    });
-    userRole = user?.role || null;
-  }
+  const upcoming = await getUpcomingEvents(me);
+  const todoCount = upcoming.filter((e) => e.myStatus === null).length;
 
-  // Nettoyer les événements passés avant d'afficher la page
-  await cleanupPastEvents();
-
-  const events = await prisma.event.findMany({
-    select: {
-      id: true, title: true, date: true, endDate: true, location: true, description: true,
-      creatorId: true,
-      creator: {
-        select: { id: true, pseudo: true, avatarUrl: true }
-      },
-      rsvps: {
-        select: { 
-          status: true,
-          userID: true,
-          user: { select: { id: true, pseudo: true, avatarUrl: true } }
-        },
-      },
-    },
-    orderBy: { date: "asc" },
-    take: 100,
-  });
-
-  // Récupérer les disponibilités
-  let availabilities: any[] = [];
-  try {
-    availabilities = await prisma.availability.findMany({
-      include: {
-        user: {
-          select: { id: true, pseudo: true, avatarUrl: true },
-        },
-      },
-      orderBy: { startDate: "asc" },
-    });
-  } catch (error) {
-    console.log("Availability table not found, skipping availabilities");
-  }
+  let list: EventVM[];
+  if (filter === "past") list = await getPastEvents(me);
+  else if (filter === "todo") list = upcoming.filter((e) => e.myStatus === null);
+  else if (filter === "going") list = upcoming.filter((e) => e.myStatus === "YES" || e.myStatus === "MAYBE");
+  else if (filter === "mine") list = upcoming.filter((e) => e.creator.id === me.id);
+  else list = upcoming;
 
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <div>
-            <h1 className={styles.pageTitle}>Mes Événements</h1>
-            <p className={styles.pageSubtitle}>
-              Organisez et participez aux événements avec vos amis
-            </p>
-          </div>
-          <div className={styles.headerActions}>
-            <Link href="/events/new" className={styles.createButton}>
-              <span className={styles.createIcon}>+</span>
-              Créer un événement
-            </Link>
-            <UserMenu />
-          </div>
+    <main className="page">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">
+            {greeting()} {me.pseudo} 👋
+          </h1>
+          <p className="page-subtitle">
+            {upcoming.length === 0
+              ? "Aucune sortie prévue pour l'instant"
+              : todoCount > 0
+                ? `${todoCount} sortie${todoCount > 1 ? "s" : ""} attend${todoCount > 1 ? "ent" : ""} ta réponse`
+                : `${upcoming.length} sortie${upcoming.length > 1 ? "s" : ""} à venir`}
+          </p>
         </div>
+        <Link href="/account" aria-label="Mon profil">
+          <Avatar user={me} size={44} />
+        </Link>
+      </header>
 
-        <div className={styles.mainContent}>
-          <div className={styles.leftPanel}>
-            <Calendar events={events} availabilities={availabilities} currentUserId={meId} />
-          </div>
+      <NotificationsCard />
 
-          <div className={styles.rightPanel}>
-            <div className={styles.eventsHeader}>
-              <h2>Événements à venir</h2>
-              <span className={styles.eventCount}>{events.length}</span>
-            </div>
+      <nav className="chips" style={{ margin: "18px -16px 16px", padding: "2px 16px" }} aria-label="Filtrer">
+        {FILTERS.map((x) => (
+          <Link
+            key={x.key}
+            href={x.key === "all" ? "/events" : `/events?f=${x.key}`}
+            className={`chip ${filter === x.key ? "is-active" : ""}`}
+            aria-current={filter === x.key ? "page" : undefined}
+            scroll={false}
+          >
+            {x.label}
+            {x.key === "todo" && todoCount > 0 && <span className="chip-count">{todoCount}</span>}
+          </Link>
+        ))}
+      </nav>
 
-            <div className={styles.eventsList}>
-              {events.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>📅</div>
-                  <p className={styles.emptyTitle}>Aucun événement</p>
-                  <p className={styles.emptyText}>
-                    Créez votre premier événement pour commencer
-                  </p>
-                  <Link href="/events/new" className={styles.emptyButton}>
-                    Créer un événement
-                  </Link>
-                </div>
-              ) : (
-                events.map((e) => {
-                  const yesRsvps = e.rsvps.filter(r => r.status === "YES");
-                  const noRsvps = e.rsvps.filter(r => r.status === "NO");
-                  const participants = yesRsvps.map(r => r.user);
-                  const notParticipating = noRsvps.map(r => r.user);
-                  
-                  return (
-                    <div key={e.id} className={styles.eventCard}>
-                      {(meId === e.creatorId || userRole === "ADMIN") && (
-                        <div className={styles.eventActions}>
-                          <EditEventButton event={{
-                            id: e.id,
-                            title: e.title,
-                            description: e.description,
-                            location: e.location,
-                            date: e.date,
-                            endDate: e.endDate
-                          }} />
-                          <DeleteEventButton eventId={e.id} />
-                        </div>
-                      )}
-
-                      <div className={styles.eventCardHeader}>
-                        <div className={styles.eventDate}>
-                          <div className={styles.eventWeekday}>
-                            {new Intl.DateTimeFormat("fr-FR", { weekday: "short" }).format(new Date(e.date))}
-                          </div>
-                          <div className={styles.eventDay}>
-                            {new Date(e.date).getDate()}
-                          </div>
-                          <div className={styles.eventMonth}>
-                            {new Intl.DateTimeFormat("fr-FR", { month: "short" }).format(new Date(e.date))}
-                          </div>
-                        </div>
-
-                        <div className={styles.eventInfo}>
-                          <h3 className={styles.eventTitle}>{e.title}</h3>
-                          <div className={styles.eventCreator}>
-                            👤 Organisé par <strong>{e.creator.pseudo}</strong>
-                          </div>
-                          <div className={styles.eventMeta}>
-                            <span className={styles.eventTime}>
-                              🕐 {fmtTime(e.date)}
-                            </span>
-                            {e.location && (
-                              <span className={styles.eventLocation}>
-                                📍 {e.location}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {e.description && (
-                        <p className={styles.eventDesc}>{e.description}</p>
-                      )}
-
-                      {/* Participants YES */}
-                      <div className={styles.eventParticipants}>
-                        <div className={styles.participantsLabel}>
-                          ✓ Participants ({participants.length})
-                        </div>
-                        {participants.length === 0 ? (
-                          <span className={styles.emptyParticipants}>
-                            Aucun participant pour l'instant
-                          </span>
-                        ) : (
-                          <div className={styles.avatarsRow}>
-                            {participants.slice(0, 5).map((u) => (
-                              <div
-                                key={u.id}
-                                className={styles.participantAvatar}
-                                data-tooltip={u.pseudo ?? ""}
-                              >
-                                {u.avatarUrl ? (
-                                  <img
-                                    src={u.avatarUrl}
-                                    alt={u.pseudo ?? "avatar"}
-                                  />
-                                ) : (
-                                  <span className={styles.avatarPlaceholder}>
-                                    {u.pseudo?.[0]?.toUpperCase() ?? "?"}
-                                  </span>
-                                )}
-                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
-                              </div>
-                            ))}
-                            {participants.length > 5 && (
-                              <div className={styles.participantAvatar}>
-                                <span className={styles.avatarPlaceholder}>
-                                  +{participants.length - 5}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Participants NO */}
-                      {notParticipating.length > 0 && (
-                        <div className={styles.eventParticipants}>
-                          <div className={styles.notParticipantsLabel}>
-                            ✗ Ne participent pas ({notParticipating.length})
-                          </div>
-                          <div className={styles.avatarsRow}>
-                            {notParticipating.slice(0, 5).map((u) => (
-                              <div
-                                key={u.id}
-                                className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}
-                                data-tooltip={u.pseudo ?? ""}
-                              >
-                                {u.avatarUrl ? (
-                                  <img
-                                    src={u.avatarUrl}
-                                    alt={u.pseudo ?? "avatar"}
-                                  />
-                                ) : (
-                                  <span className={styles.avatarPlaceholder}>
-                                    {u.pseudo?.[0]?.toUpperCase() ?? "?"}
-                                  </span>
-                                )}
-                                <span className={styles.avatarTooltip}>{u.pseudo}</span>
-                              </div>
-                            ))}
-                            {notParticipating.length > 5 && (
-                              <div className={`${styles.participantAvatar} ${styles.notParticipatingAvatar}`}>
-                                <span className={styles.avatarPlaceholder}>
-                                  +{notParticipating.length - 5}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className={styles.eventFooter}>
-                        <RsvpButtons eventId={e.id} />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+      {list.length === 0 ? (
+        <EmptyState filter={filter} />
+      ) : (
+        <div className="stack">
+          {list.map((e) => (
+            <EventCard key={e.id} event={e} past={filter === "past"} />
+          ))}
         </div>
-      </div>
+      )}
+    </main>
+  );
+}
+
+function EmptyState({ filter }: { filter: FilterKey }) {
+  const content: Record<FilterKey, [string, string, string]> = {
+    all: ["🦗", "C'est calme par ici…", "Lance la première sortie, les autres suivront !"],
+    todo: ["✅", "Tu as répondu à tout", "Bravo, rien en attente."],
+    going: ["🛋️", "Rien de prévu pour toi", "Jette un œil aux sorties proposées par les potes."],
+    mine: ["💡", "Tu n'as rien organisé", "Une idée de sortie ? Propose-la en 30 secondes."],
+    past: ["📼", "Pas encore de souvenirs", "Les sorties terminées apparaîtront ici."],
+  };
+  const [emoji, title, text] = content[filter];
+  return (
+    <div className="empty">
+      <div className="empty-emoji">{emoji}</div>
+      <p className="empty-title">{title}</p>
+      <p className="empty-text">{text}</p>
+      {filter !== "todo" && filter !== "past" && (
+        <Link href="/events/new" className="btn btn-primary">
+          Proposer une sortie
+        </Link>
+      )}
     </div>
   );
 }

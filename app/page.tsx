@@ -1,60 +1,53 @@
 import Link from "next/link";
-import Image from "next/image";
-import styles from "./page.module.css";
+import { redirect } from "next/navigation";
+import { getMe } from "@/lib/session";
+import styles from "./auth.module.css";
 
-export default function Home() {
+export default async function Home() {
+  if (await getMe()) redirect("/events");
+
   return (
-    <div className={styles.container}>
-      <div className={styles.background}>
-        <div className={styles.gradientOrb1}></div>
-        <div className={styles.gradientOrb2}></div>
-        <div className={styles.gradientOrb3}></div>
-      </div>
-
-      <div className={styles.content}>
-        <div className={styles.logoContainer}>
-          <Image
-            src="/logoCalendrier.png"
-            alt="Logo"
-            width={80}
-            height={80}
-            className={styles.logo}
-          />
+    <main className={styles.screen}>
+      <div className={styles.box}>
+        <div className={styles.logo}>
+          <img src="/logoCalendrier.png" alt="" />
         </div>
-
-        <h1 className={styles.title}>FriendsCalendar</h1>
-        <p className={styles.subtitle}>
-          Partagez vos moments avec vos amis.<br />
-          Organisez vos événements simplement.
-        </p>
-
-        <div className={styles.buttonGroup}>
-          <Link href="/login" className={styles.primaryButton}>
-            Se connecter
-          </Link>
-          <Link href="/register" className={styles.secondaryButton}>
-            Créer un compte
-          </Link>
-        </div>
+        <h1 className={styles.title}>Les Indécis</h1>
+        <p className={styles.subtitle}>Les sorties du groupe, enfin organisées. Sans prise de tête.</p>
 
         <div className={styles.features}>
           <div className={styles.feature}>
-            <div className={styles.featureIcon}>📅</div>
-            <h3>Calendrier partagé</h3>
-            <p>Créez et partagez des événements avec vos amis</p>
+            <span className={styles.featureEmoji}>🍻</span>
+            <div>
+              Propose une sortie en 30 secondes
+              <div className={styles.featureText}>Tout le monde est prévenu sur son téléphone</div>
+            </div>
           </div>
           <div className={styles.feature}>
-            <div className={styles.featureIcon}>🔔</div>
-            <h3>Notifications</h3>
-            <p>Restez informé des nouveaux événements</p>
+            <span className={styles.featureEmoji}>👍</span>
+            <div>
+              Réponds en un geste
+              <div className={styles.featureText}>J'y vais, peut-être ou pas dispo</div>
+            </div>
           </div>
           <div className={styles.feature}>
-            <div className={styles.featureIcon}>✅</div>
-            <h3>RSVP facile</h3>
-            <p>Confirmez votre présence en un clic</p>
+            <span className={styles.featureEmoji}>📅</span>
+            <div>
+              Trouve le bon jour
+              <div className={styles.featureText}>Vois qui est dispo, et quand</div>
+            </div>
           </div>
         </div>
+
+        <div className="stack" style={{ gap: 10 }}>
+          <Link href="/register" className="btn btn-primary btn-lg btn-block">
+            Créer mon compte
+          </Link>
+          <Link href="/login" className="btn btn-outline btn-lg btn-block">
+            J'ai déjà un compte
+          </Link>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

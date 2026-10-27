@@ -1,47 +1,34 @@
-// app/api/account/route.ts
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getMeId } from "@/lib/session";
 import bcrypt from "bcrypt";
+
 export const runtime = "nodejs";
 
-
+// Changement de mot de passe
 export async function PATCH(req: Request) {
-  const session = await getServerSession(authOptions);
-  const userIdStr = session?.user?.id;
-  if (!userIdStr) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const meId = await getMeId();
+  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
-  const email = String(body?.email ?? "").trim().toLowerCase();
-  const pseudo = String(body?.pseudo ?? "").trim();
-  const currentPassword = body?.currentPassword ? String(body.currentPassword) : undefined;
-  const newPassword = body?.newPassword ? String(body.newPassword) : undefined;
+  const currentPassword = String(body?.currentPassword ?? "");
+  const newPassword = String(body?.newPassword ?? "");
 
-  if (!email || !email.includes("@") || !pseudo) {
-    return NextResponse.json({ error: "Entrées invalides" }, { status: 400 });
+  if (newPassword.length < 6) {
+    return NextResponse.json({ error: "Le nouveau mot de passe doit faire au moins 6 caractères" }, { status: 400 });
   }
 
-  const data: any = { email, pseudo };
+  const me = await prisma.user.findUnique({ where: { id: meId }, select: { passwordHash: true } });
+  if (!me) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
 
-  // Changement de mot de passe (optionnel)
-  if (newPassword) {
-    if (!currentPassword) return NextResponse.json({ error: "Mot de passe actuel requis" }, { status: 400 });
-    if (newPassword.length < 6) return NextResponse.json({ error: "Nouveau mot de passe trop court" }, { status: 400 });
-
-    const me = await prisma.user.findUnique({ where: { id: Number(userIdStr) }, select: { passwordHash: true } });
-    if (!me?.passwordHash) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
-
-    const ok = await bcrypt.compare(currentPassword, me.passwordHash);
-    if (!ok) return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 400 });
-
-    data.passwordHash = await bcrypt.hash(newPassword, 12);
+  // Compte créé avec Google (sans mot de passe) : on peut en définir un directement
+  if (me.passwordHash && !(await bcrypt.compare(currentPassword, me.passwordHash))) {
+    return NextResponse.json({ error: "Mot de passe actuel incorrect" }, { status: 400 });
   }
 
   await prisma.user.update({
-    where: { id: Number(userIdStr) },
-    data,
+    where: { id: meId },
+    data: { passwordHash: await bcrypt.hash(newPassword, 12) },
   });
-
-  return NextResponse.json({ ok: true }, { status: 200 });
+  return NextResponse.json({ ok: true });
 }

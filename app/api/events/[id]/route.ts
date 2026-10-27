@@ -1,97 +1,88 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { NextResponse, after, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { NextRequest } from "next/server";
+import { getMe, canManageEvent } from "@/lib/session";
+import { parseEventInput } from "@/lib/eventInput";
+import { sendPush } from "@/lib/push";
+import { eventWhen } from "@/lib/dates";
+import { eventEmoji } from "@/lib/eventEmoji";
+
 export const runtime = "nodejs";
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+type Ctx = { params: Promise<{ id: string }> };
 
-  const eventId = Number(id);
-  const ev = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true, creatorId: true } });
-  if (!ev) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
-
-  // Récupérer le rôle de l'utilisateur
-  const user = await prisma.user.findUnique({ 
-    where: { id: userId },
-    select: { role: true }
-  });
-
-  // Autoriser la modification si l'utilisateur est le créateur OU s'il est admin
-  if (ev.creatorId !== userId && user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Interdit" }, { status: 403 });
-  }
-
-  // Récupérer les données de la requête
-  const body = await req.json().catch(() => null);
-  const title = String(body?.title ?? "").trim();
-  const description = String(body?.description ?? "").trim();
-  const location = String(body?.location ?? "").trim();
-  const dateStr = String(body?.date ?? "");
-  const endDateStr = body?.endDate ? String(body.endDate) : null;
-
-  if (!title || !description || !location || !dateStr) {
-    return NextResponse.json({ error: "Données invalides" }, { status: 400 });
-  }
-
-  const date = new Date(dateStr);
-  const endDate = endDateStr ? new Date(endDateStr) : null;
-
-  if (isNaN(date.getTime())) {
-    return NextResponse.json({ error: "Date invalide" }, { status: 400 });
-  }
-
-  if (endDate && isNaN(endDate.getTime())) {
-    return NextResponse.json({ error: "Date de fin invalide" }, { status: 400 });
-  }
-
-  if (endDate && endDate <= date) {
-    return NextResponse.json({ error: "La date de fin doit être après la date de début" }, { status: 400 });
-  }
-
-  // Mettre à jour l'événement
-  await prisma.event.update({
+async function loadForManage(ctx: Ctx) {
+  const me = await getMe();
+  if (!me) return { error: NextResponse.json({ error: "Non connecté" }, { status: 401 }) };
+  const eventId = Number((await ctx.params).id);
+  if (!Number.isInteger(eventId)) return { error: NextResponse.json({ error: "Introuvable" }, { status: 404 }) };
+  const event = await prisma.event.findUnique({
     where: { id: eventId },
-    data: { title, description, location, date, endDate }
+    include: { rsvps: { select: { userID: true, status: true } } },
   });
-
-  return NextResponse.json({ ok: true }, { status: 200 });
+  if (!event) return { error: NextResponse.json({ error: "Événement introuvable" }, { status: 404 }) };
+  if (!canManageEvent(me, event)) {
+    return { error: NextResponse.json({ error: "Seul l'organisateur peut faire ça" }, { status: 403 }) };
+  }
+  return { me, event };
 }
 
-export async function DELETE(
-    _req: NextRequest,
-    { params }: { params: Promise<{ id: string }> } // 👈 Promise
-  ) {
-  const { id } = await params; // 👈 await
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+/** Personnes concernées : celles qui viennent ou hésitent (sauf moi) */
+function interested(event: { rsvps: { userID: number; status: string }[] }, meId: number) {
+  return event.rsvps.filter((r) => r.status !== "NO" && r.userID !== meId).map((r) => r.userID);
+}
 
-  const eventId = Number(id);
-  const ev = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true, creatorId: true } });
-  if (!ev) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
-  
-  // Récupérer le rôle de l'utilisateur
-  const user = await prisma.user.findUnique({ 
-    where: { id: userId },
-    select: { role: true }
+export async function PUT(req: NextRequest, ctx: Ctx) {
+  const res = await loadForManage(ctx);
+  if (res.error) return res.error;
+  const { me, event } = res;
+
+  const { data, error } = parseEventInput(await req.json().catch(() => null));
+  if (!data) return NextResponse.json({ error }, { status: 400 });
+
+  const timeChanged =
+    data.date.getTime() !== event.date.getTime() ||
+    (data.endDate?.getTime() ?? null) !== (event.endDate?.getTime() ?? null);
+  const placeChanged = data.location !== event.location;
+
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { ...data, ...(timeChanged ? { reminderSentAt: null } : {}) },
   });
 
-  // Autoriser la suppression si l'utilisateur est le créateur OU s'il est admin
-  if (ev.creatorId !== userId && user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Interdit" }, { status: 403 });
+  if (timeChanged || placeChanged) {
+    const changes = [
+      timeChanged && `nouvel horaire : ${eventWhen(data.date, data.endDate)}`,
+      placeChanged && (data.location ? `nouveau lieu : ${data.location}` : "lieu modifié"),
+    ].filter(Boolean).join(", ");
+    after(() =>
+      sendPush(interested(event, me.id), {
+        title: `✏️ ${data.title} a changé`,
+        body: changes.charAt(0).toUpperCase() + changes.slice(1),
+        url: `/events/${event.id}`,
+        tag: `event-${event.id}`,
+      })
+    );
   }
 
-  // Si pas de cascade en schéma, nettoie les RSVPs
-  await prisma.rsvp.deleteMany({ where: { eventID: eventId } });
-  await prisma.event.delete({ where: { id: eventId } });
+  return NextResponse.json({ ok: true });
+}
 
-  return NextResponse.json({ ok: true }, { status: 200 });
+export async function DELETE(_req: NextRequest, ctx: Ctx) {
+  const res = await loadForManage(ctx);
+  if (res.error) return res.error;
+  const { me, event } = res;
+
+  const toNotify = event.date > new Date() ? interested(event, me.id) : [];
+  await prisma.event.delete({ where: { id: event.id } });
+
+  after(() =>
+    sendPush(toNotify, {
+      title: `❌ ${event.title} est annulé`,
+      body: `${eventEmoji(event.title)} Prévu ${eventWhen(event.date).toLowerCase()} — annulé par l'organisateur.`,
+      url: `/events`,
+      tag: `event-${event.id}`,
+    })
+  );
+
+  return NextResponse.json({ ok: true });
 }

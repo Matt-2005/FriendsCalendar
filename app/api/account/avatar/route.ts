@@ -1,110 +1,54 @@
-// app/api/account/avatar/route.ts
-export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
 import { prisma } from "@/lib/prisma";
+import { getMeId } from "@/lib/session";
 import { v2 as cloudinary } from "cloudinary";
 
+export const runtime = "nodejs";
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 export async function POST(req: Request) {
+  const meId = await getMeId();
+  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+
+  const form = await req.formData().catch(() => null);
+  const file = form?.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return NextResponse.json({ error: "Aucune image reçue" }, { status: 400 });
+  }
+  if (!file.type.startsWith("image/")) {
+    return NextResponse.json({ error: "Ce fichier n'est pas une image" }, { status: 400 });
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: "Image trop lourde (10 Mo maximum)" }, { status: 400 });
+  }
+
   try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id ? Number(session.user.id) : null;
-    if (!userId) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-
-    const form = await req.formData().catch((err) => {
-      console.error("Erreur lors de la lecture du FormData:", err);
-      return null;
-    });
-    
-    if (!form) {
-      return NextResponse.json({ error: "Impossible de lire les données du formulaire" }, { status: 400 });
-    }
-
-    const file = form.get("file") as File | null;
-    
-    if (!file) {
-      return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
-    }
-
-    console.log("Fichier reçu:", { name: file.name, type: file.type, size: file.size });
-
-    // Vérifier la taille du fichier (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "Fichier trop volumineux (max 10MB)" }, { status: 400 });
-    }
-
-    // Vérifier que c'est bien une image
-    if (file.size === 0) {
-      return NextResponse.json({ error: "Le fichier est vide" }, { status: 400 });
-    }
-
-    // Convertit le File (Web API) en Buffer puis upload
-    const arrayBuf = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuf);
-
-    console.log("Buffer créé, taille:", buffer.length);
-    console.log("Config Cloudinary:", {
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret_present: !!process.env.CLOUDINARY_API_SECRET
-    });
-
+    const buffer = Buffer.from(await file.arrayBuffer());
     const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { 
-          folder: "lesindecis/avatars", 
-          resource_type: "image", 
-          overwrite: true,
-          // L'image est déjà recadrée côté client, on optimise juste
-          transformation: [
-            { quality: "auto:good" }, // Qualité optimisée
-            { fetch_format: "auto" } // Format optimal (webp si supporté)
-          ]
-        },
-        (err, res) => {
-          if (err) {
-            console.error("Erreur Cloudinary complète:", JSON.stringify(err, null, 2));
-            console.error("Message:", err.message);
-            console.error("HTTP code:", err.http_code);
-            reject(err);
-          } else {
-            console.log("Upload Cloudinary réussi:", res?.secure_url);
-            resolve(res as any);
-          }
-        }
-      );
-      stream.end(buffer);
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: "lesindecis/avatars",
+            public_id: `user-${meId}`,
+            overwrite: true,
+            invalidate: true,
+            resource_type: "image",
+            transformation: [{ width: 400, height: 400, crop: "fill" }, { quality: "auto:good" }, { fetch_format: "auto" }],
+          },
+          (err, res) => (err || !res ? reject(err) : resolve(res))
+        )
+        .end(buffer);
     });
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { avatarUrl: uploaded.secure_url },
-    });
-
+    await prisma.user.update({ where: { id: meId }, data: { avatarUrl: uploaded.secure_url } });
     return NextResponse.json({ ok: true, url: uploaded.secure_url });
-  } catch (error) {
-    console.error("Erreur dans l'API avatar:", error);
-    
-    // Extraire plus d'infos si c'est une erreur Cloudinary
-    let details = "Erreur inconnue";
-    if (error && typeof error === 'object') {
-      const err = error as any;
-      details = err.message || err.error?.message || JSON.stringify(err, null, 2);
-    } else if (error instanceof Error) {
-      details = error.message;
-    }
-    
-    return NextResponse.json({ 
-      error: "Erreur lors de l'upload", 
-      details: details
-    }, { status: 500 });
+  } catch (error: any) {
+    console.error("Avatar upload error:", error?.message ?? error);
+    return NextResponse.json({ error: "L'envoi de la photo a échoué, réessaie" }, { status: 500 });
   }
 }

@@ -1,116 +1,125 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
-import styles from "./login.module.css";
+import styles from "../auth.module.css";
+import GoogleButton, { OrSeparator } from "../components/GoogleButton";
 
-export default function LoginForm({ callbackUrl }: { callbackUrl: string }) {
-  const r = useRouter();
-  const [email, setEmail] = useState("");
+export default function LoginForm({
+  callbackUrl,
+  initialEmail,
+  googleEnabled,
+  initialError,
+}: {
+  callbackUrl: string;
+  initialEmail: string;
+  googleEnabled: boolean;
+  initialError: string | null;
+}) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  const [show, setShow] = useState(false);
+  const [err, setErr] = useState<string | null>(initialError);
   const [loading, setLoading] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErr(null); 
+    setErr(null);
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false, callbackUrl });
-    setLoading(false);
-    if (res?.error) setErr("Email ou mot de passe invalide");
-    else r.push(callbackUrl);
+    const res = await signIn("credentials", { email: email.trim(), password, redirect: false }).catch(() => null);
+    if (!res || res.error) {
+      setLoading(false);
+      setErr(
+        res
+          ? googleEnabled
+            ? "Email ou mot de passe incorrect. Si tu t'es inscrit avec Google, utilise le bouton Google."
+            : "Email ou mot de passe incorrect"
+          : "Pas de connexion internet"
+      );
+      return;
+    }
+    // Rechargement complet pour repartir avec une session propre
+    window.location.href = callbackUrl;
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.background}>
-        <div className={styles.gradientOrb1}></div>
-        <div className={styles.gradientOrb2}></div>
-      </div>
-
-      <div className={styles.formCard}>
-        <Link href="/" className={styles.backButton}>
-          ← Retour
-        </Link>
-
-        <div className={styles.logoContainer}>
-          <Image
-            src="/logoCalendrier.png"
-            alt="Logo"
-            width={60}
-            height={60}
-            className={styles.logo}
-          />
+    <main className={styles.screen}>
+      <Link href="/" className={`back-link ${styles.back}`}>
+        ‹ Retour
+      </Link>
+      <div className={styles.box}>
+        <div className={styles.logo}>
+          <img src="/logoCalendrier.png" alt="" />
         </div>
+        <h1 className={styles.title}>Content de te revoir</h1>
+        <p className={styles.subtitle}>Connecte-toi pour voir les prochaines sorties.</p>
 
-        <h1 className={styles.title}>Connexion</h1>
-        <p className={styles.subtitle}>
-          Bienvenue ! Connectez-vous pour accéder à votre calendrier.
-        </p>
-
-        <form onSubmit={onSubmit} className={styles.form}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="email" className={styles.label}>
-              Email
-            </label>
+        <form onSubmit={onSubmit} className={styles.card}>
+          {googleEnabled && (
+            <>
+              <GoogleButton callbackUrl={callbackUrl} />
+              <OrSeparator />
+            </>
+          )}
+          <div className="field">
+            <label htmlFor="email" className="label">Email</label>
             <input
               id="email"
               type="email"
-              placeholder="votre@email.com"
+              className="input"
+              placeholder="toi@exemple.fr"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              className={styles.input}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
+              enterKeyHint="next"
               required
             />
           </div>
-
-          <div className={styles.inputGroup}>
-            <label htmlFor="password" className={styles.label}>
-              Mot de passe
-            </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className={styles.input}
-              required
-            />
-          </div>
-
-          {err && (
-            <div className={styles.error}>
-              <span className={styles.errorIcon}>⚠️</span>
-              {err}
+          <div className="field">
+            <label htmlFor="password" className="label">Mot de passe</label>
+            <div className="input-wrap">
+              <input
+                id="password"
+                type={show ? "text" : "password"}
+                className="input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                enterKeyHint="go"
+                required
+              />
+              <button type="button" className="input-action" onClick={() => setShow((s) => !s)}>
+                {show ? "Cacher" : "Voir"}
+              </button>
             </div>
-          )}
+          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={styles.submitButton}
-          >
-            {loading ? (
-              <span className={styles.spinner}></span>
-            ) : (
-              "Se connecter"
-            )}
+          {err && <div className="alert alert-error" style={{ marginTop: 14 }}>⚠️ {err}</div>}
+
+          <button type="submit" disabled={loading || !email || !password} className="btn btn-primary btn-lg btn-block" style={{ marginTop: 18 }}>
+            {loading ? <span className="spinner" /> : "Se connecter"}
           </button>
+
+          <button type="button" className="btn btn-ghost btn-sm btn-block" style={{ marginTop: 8 }} onClick={() => setForgot((f) => !f)}>
+            Mot de passe oublié ?
+          </button>
+          {forgot && (
+            <p className="alert alert-info" style={{ marginTop: 6 }}>
+              Demande à l'admin du groupe : il peut te créer un mot de passe provisoire depuis son profil.
+            </p>
+          )}
         </form>
 
-        <div className={styles.footer}>
-          <p>
-            Pas encore de compte ?{" "}
-            <Link href="/register" className={styles.link}>
-              S'inscrire
-            </Link>
-          </p>
-        </div>
+        <p className={styles.footer}>
+          Pas encore de compte ? <Link href="/register">Inscris-toi</Link>
+        </p>
       </div>
-    </div>
+    </main>
   );
 }
