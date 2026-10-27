@@ -9,6 +9,8 @@ export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+const KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 async function loadMine(ctx: Ctx) {
   const meId = await getMeId();
   if (!meId) return { error: NextResponse.json({ error: "Non connecté" }, { status: 401 }) };
@@ -32,8 +34,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const a = res.availability;
   const body = await req.json().catch(() => ({}));
 
-  const startKey = body.start ?? (body.startDate ? dayKey(body.startDate) : dayKey(a.startDate));
-  const endKey = body.end ?? (body.endDate ? dayKey(body.endDate) : dayKey(a.endDate));
+  let startKey: string;
+  let endKey: string;
+  try {
+    startKey = String(body.start ?? (body.startDate ? dayKey(body.startDate) : dayKey(a.startDate)));
+    endKey = String(body.end ?? (body.endDate ? dayKey(body.endDate) : dayKey(a.endDate)));
+  } catch {
+    return NextResponse.json({ error: "Date invalide" }, { status: 400 });
+  }
+  if (!KEY_RE.test(startKey) || !KEY_RE.test(endKey)) return NextResponse.json({ error: "Date invalide" }, { status: 400 });
   if (startKey > endKey) return NextResponse.json({ error: "La fin doit être après le début" }, { status: 400 });
   if (body.type !== undefined && !isAvailType(body.type)) {
     return NextResponse.json({ error: "Type invalide" }, { status: 400 });

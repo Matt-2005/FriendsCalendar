@@ -1,3 +1,4 @@
+import "server-only";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";

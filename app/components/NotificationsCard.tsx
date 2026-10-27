@@ -34,14 +34,14 @@ export default function NotificationsCard({ variant = "banner" }: { variant?: "b
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(true);
-  const [installEvent, setInstallEvent] = useState<any>(null);
+  const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     getPushState().then(setState).catch(() => setState("unsupported"));
     setDismissed(variant === "banner" && localStorage.getItem(DISMISS_KEY) === "1");
     const onPrompt = (e: Event) => {
       e.preventDefault();
-      setInstallEvent(e);
+      setInstallEvent(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);

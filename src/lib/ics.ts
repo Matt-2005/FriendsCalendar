@@ -1,3 +1,4 @@
+import "server-only";
 import ical, { ICalAlarmType, ICalCalendarMethod, ICalEventStatus, type ICalCalendar } from "ical-generator";
 import { eventEmoji } from "./eventEmoji";
 

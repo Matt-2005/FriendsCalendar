@@ -57,19 +57,19 @@ export default function PasswordForm({ hasPassword }: { hasPassword: boolean }) 
       <div className="field">
         <label className="label" htmlFor="new-pw">Nouveau mot de passe</label>
         <div className="input-wrap">
-          <input id="new-pw" type={show ? "text" : "password"} className="input" autoComplete="new-password" minLength={6} value={next} onChange={(e) => setNext(e.target.value)} />
+          <input id="new-pw" type={show ? "text" : "password"} className="input" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} />
           <button type="button" className="input-action" onClick={() => setShow((s) => !s)}>
             {show ? "Cacher" : "Voir"}
           </button>
         </div>
-        <span className="hint">6 caractères minimum</span>
+        <span className="hint">8 caractères minimum</span>
       </div>
       {err && <div className="alert alert-error" style={{ marginTop: 12 }}>{err}</div>}
       <div className="grid-2" style={{ marginTop: 16 }}>
         <button type="button" className="btn btn-outline" onClick={() => setOpen(false)}>
           Annuler
         </button>
-        <button type="submit" className="btn btn-primary" disabled={busy || (has && !current) || next.length < 6}>
+        <button type="submit" className="btn btn-primary" disabled={busy || (has && !current) || next.length < 8}>
           {busy ? <span className="spinner" /> : "Valider"}
         </button>
       </div>

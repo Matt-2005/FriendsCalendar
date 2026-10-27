@@ -1,3 +1,4 @@
+import "server-only";
 // lib/token.ts
 import { randomBytes } from "crypto";
 export function genCalendarToken() {

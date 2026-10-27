@@ -1,3 +1,4 @@
+import "server-only";
 import { headers } from "next/headers";
 
 /** URL publique du site (ex. https://calendar.matthewle.fr), sans slash final. */

@@ -1,9 +1,11 @@
+import "server-only";
 import type { NextAuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import { genCalendarToken } from "@/lib/token";
 import bcrypt from "bcrypt";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 
@@ -24,11 +26,19 @@ export const authOptions: NextAuthOptions = {
     Credentials({
       name: "Credentials",
       credentials: { email: {}, password: {} },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         // Les téléphones mettent souvent une majuscule au début ou un espace à la fin
         const email = String(credentials?.email ?? "").trim();
         const password = String(credentials?.password ?? "");
-        if (!email || !password) return null;
+        if (!email || !password || password.length > 200) return null;
+
+        // Anti-devinette de mot de passe
+        const fwd = req?.headers?.["x-forwarded-for"];
+        const ip = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0]?.trim() ?? "unknown";
+        const window = 15 * 60 * 1000;
+        if (!rateLimit(`login:${ip}:${email.toLowerCase()}`, 8, window).ok || !rateLimit(`login:${ip}`, 30, window).ok) {
+          throw new Error("TooManyAttempts");
+        }
 
         const user = await findByEmail(email);
         // passwordHash vide = compte créé avec Google, sans mot de passe
@@ -99,7 +109,7 @@ export const authOptions: NextAuthOptions = {
           token.picture = dbUser.avatarUrl;
         }
       } else if (user) {
-        token.id = (user as any).id;
+        token.id = user.id;
         token.name = user.name ?? null;
         token.email = user.email ?? null;
         token.picture = user.image ?? null;
@@ -116,7 +126,7 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.id as string;
+        session.user.id = token.id ?? "";
         session.user.name = (token.name as string | null) ?? session.user.name ?? null;
         session.user.email = (token.email as string | null) ?? session.user.email ?? null;
         session.user.image = (token.picture as string | null) ?? session.user.image ?? null;

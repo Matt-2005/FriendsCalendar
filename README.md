@@ -13,6 +13,49 @@ Une appli web pensée pour le téléphone qui aide un groupe de potes à s'organ
 - **Appli installable** sur l'écran d'accueil (PWA).
 - **Admin** : un compte `ADMIN` peut créer un mot de passe provisoire pour un membre qui a oublié le sien (depuis son Profil).
 
+## Technologies
+
+| Rôle | Outil |
+| --- | --- |
+| Application (pages + API) | Next.js 15 (App Router), React 19, TypeScript strict |
+| Base de données | PostgreSQL (Prisma Postgres) via l'ORM Prisma 6 |
+| Connexion | next-auth 4 : email + mot de passe (bcrypt) et Google |
+| Photos | Cloudinary |
+| Notifications | Web Push (VAPID) + service worker |
+| Agenda | flux iCalendar (ical-generator) |
+| Hébergement | Vercel (région Francfort), tâche planifiée quotidienne |
+| Qualité | ESLint, TypeScript, GitHub Actions, Dependabot |
+
+## Organisation du code
+
+```
+app/                    Pages et routes API (Next.js App Router)
+  (app)/                Pages réservées aux membres connectés (Sorties, Calendrier, Dispos, Profil)
+  api/                  Routes API (chacune vérifie la session et valide ce qu'elle reçoit)
+  components/           Composants partagés (boutons de réponse, navigation, notifications…)
+  login/, register/     Connexion et inscription
+src/lib/                Logique serveur : session, base, notifications, dates, sécurité…
+src/types/              Types TypeScript complémentaires
+prisma/                 Schéma, migrations et données de démo (seed)
+scripts/dev-db.sh       Base de test locale
+public/                 Icônes, service worker
+```
+
+Les modules de `src/lib` qui touchent à la base ou aux secrets commencent par `import "server-only"` : ils ne peuvent pas être envoyés au navigateur par erreur.
+
+## Sécurité
+
+- **Sessions** chiffrées (next-auth, `NEXTAUTH_SECRET`), mots de passe hachés avec bcrypt, 8 caractères minimum.
+- **Droits vérifiés côté serveur** à chaque requête : seul l'organisateur (ou un admin) modifie une sortie, chacun ne touche qu'à ses dispos, les actions admin relisent le rôle en base.
+- **Limitation des tentatives** : connexion (8 essais / 15 min), inscription, relances, envois de notifications, photos.
+- **Anti-CSRF** : les requêtes qui modifient des données doivent venir du site lui-même (`middleware.ts`).
+- **En-têtes de sécurité** (`next.config.ts`) : politique de contenu (CSP), HSTS, interdiction d'intégrer le site dans une iframe, etc.
+- **Notifications** : seuls les services officiels (Apple, Google, Mozilla, Microsoft) sont acceptés.
+- **Secrets** uniquement dans les variables d'environnement, jamais dans git (`.env.example` sert de modèle).
+- Lien d'agenda personnel aléatoire et régénérable ; clé de la tâche planifiée comparée en temps constant.
+
+Vérifier avant d'envoyer du code : `npm run check` (lint + TypeScript). GitHub refait ces vérifications et la compilation à chaque envoi.
+
 ## Variables d'environnement
 
 | Variable | Rôle |

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getMeId } from "@/lib/session";
 import { v2 as cloudinary } from "cloudinary";
+import { rateLimit, tooMany } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,8 @@ cloudinary.config({
 export async function POST(req: Request) {
   const meId = await getMeId();
   if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  const limit = rateLimit(`avatar:${meId}`, 10, 60 * 60 * 1000);
+  if (!limit.ok) return tooMany(limit.retryAfterSec);
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("file");
@@ -47,8 +50,8 @@ export async function POST(req: Request) {
 
     await prisma.user.update({ where: { id: meId }, data: { avatarUrl: uploaded.secure_url } });
     return NextResponse.json({ ok: true, url: uploaded.secure_url });
-  } catch (error: any) {
-    console.error("Avatar upload error:", error?.message ?? error);
+  } catch (error) {
+    console.error("Avatar upload error:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "L'envoi de la photo a échoué, réessaie" }, { status: 500 });
   }
 }

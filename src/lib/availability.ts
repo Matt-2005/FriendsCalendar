@@ -1,3 +1,4 @@
+import "server-only";
 import { addDaysToKey, dayKey, parisDayEnd, parisDayStart } from "./dates";
 
 export const AVAIL_TYPES = ["AVAILABLE", "BUSY", "VACATION"] as const;

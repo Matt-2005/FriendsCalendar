@@ -64,7 +64,9 @@ export default function LoginForm({
     if (!res || res.error) {
       setLoading(false);
       setErr(
-        res
+        res?.error === "TooManyAttempts"
+          ? "Trop de tentatives. Patiente 15 minutes avant de réessayer."
+          : res
           ? googleEnabled
             ? "Email ou mot de passe incorrect. Si tu t'es inscrit avec Google, utilise le bouton Google."
             : "Email ou mot de passe incorrect"

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendPush } from "@/lib/push";
 import { dayKey, fmtTime, parisDayEnd, parisDayStart, todayKey, addDaysToKey } from "@/lib/dates";
@@ -13,8 +14,7 @@ export const dynamic = "force-dynamic";
  * - "Tu n'as pas répondu" pour les sorties de demain
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!isAuthorizedCron(req.headers.get("authorization"))) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -58,4 +58,13 @@ export async function GET(req: Request) {
   }
 
   return NextResponse.json({ ok: true, today: todays.length, tomorrow: tomorrows.length, sent });
+}
+
+/** Compare la clé en temps constant (évite de la deviner caractère par caractère) */
+function isAuthorizedCron(header: string | null) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || !header) return false;
+  const expected = Buffer.from(`Bearer ${secret}`);
+  const given = Buffer.from(header);
+  return given.length === expected.length && timingSafeEqual(given, expected);
 }
