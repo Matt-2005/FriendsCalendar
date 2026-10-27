@@ -35,12 +35,21 @@ function nextWeekday(target: number) {
 
 type Duration = number | "evening" | "custom" | null;
 
+export type PlaceSuggestions = {
+  /** Moi en premier, puis les autres membres */
+  hosts: { id: number; pseudo: string; isMe: boolean }[];
+  /** Lieux utilisés récemment (bars, restos…) */
+  recent: string[];
+};
+
 export default function EventForm({
   initial,
   eventId,
+  places,
 }: {
   initial?: Partial<EventFormValues>;
   eventId?: number;
+  places?: PlaceSuggestions;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -238,10 +247,40 @@ export default function EventForm({
           className="input"
           value={v.location}
           onChange={(e) => set({ location: e.target.value })}
-          placeholder="Ex : Chez moi, Le Bar du Coin…"
+          placeholder="Ex : Chez Léa, Le Bar du Coin…"
           maxLength={200}
           autoComplete="off"
         />
+        {places && (places.hosts.length > 0 || places.recent.length > 0) && (
+          <div className="chips" style={{ marginTop: 4 }}>
+            {places.hosts.map((h) => {
+              // "Chez moi" est enregistré avec le prénom : sinon chacun le lirait comme chez lui
+              const value = `Chez ${h.pseudo}`;
+              return (
+                <button
+                  key={h.id}
+                  type="button"
+                  className="chip"
+                  aria-pressed={v.location === value}
+                  onClick={() => set({ location: v.location === value ? "" : value })}
+                >
+                  🏠 {h.isMe ? "Chez moi" : value}
+                </button>
+              );
+            })}
+            {places.recent.map((place) => (
+              <button
+                key={place}
+                type="button"
+                className="chip"
+                aria-pressed={v.location === place}
+                onClick={() => set({ location: v.location === place ? "" : place })}
+              >
+                📍 {place}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Détails */}
