@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useToast } from "./Toast";
+import { errorMessage } from "@/lib/errors";
 
 export type RsvpStatus = "YES" | "MAYBE" | "NO";
 
@@ -42,9 +43,9 @@ export default function RsvpButtons({
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error);
       showToast(OPTIONS.find((o) => o.kind === kind)!.toast);
       startTransition(() => router.refresh());
-    } catch (e: any) {
+    } catch (e) {
       setCurrent(previous);
-      showToast(e?.message || "Pas de connexion, réessaie");
+      showToast(errorMessage(e, "Pas de connexion, réessaie"));
     }
   }
 

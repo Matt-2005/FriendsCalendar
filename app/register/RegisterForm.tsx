@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import styles from "../auth.module.css";
+import { errorMessage } from "@/lib/errors";
 import GoogleButton, { OrSeparator } from "../components/GoogleButton";
 
 export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
@@ -30,8 +31,8 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
       // Connexion automatique : pas besoin de retaper ses identifiants
       const login = await signIn("credentials", { email: email.trim(), password, redirect: false });
       window.location.href = login?.error ? `/login?email=${encodeURIComponent(email.trim())}` : "/events";
-    } catch (e: any) {
-      setErr(e?.message === "Failed to fetch" ? "Pas de connexion internet" : e?.message);
+    } catch (e) {
+      setErr(errorMessage(e, "Erreur serveur, réessaie"));
       setLoading(false);
     }
   }
@@ -98,7 +99,7 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
-                minLength={6}
+                minLength={8}
                 enterKeyHint="go"
                 required
               />
@@ -106,14 +107,14 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
                 {show ? "Cacher" : "Voir"}
               </button>
             </div>
-            <span className="hint">6 caractères minimum</span>
+            <span className="hint">8 caractères minimum</span>
           </div>
 
           {err && <div className="alert alert-error" style={{ marginTop: 14 }}>⚠️ {err}</div>}
 
           <button
             type="submit"
-            disabled={loading || !pseudo.trim() || !email || password.length < 6}
+            disabled={loading || !pseudo.trim() || !email || password.length < 8}
             className="btn btn-primary btn-lg btn-block"
             style={{ marginTop: 18 }}
           >

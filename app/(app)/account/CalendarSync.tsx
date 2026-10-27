@@ -58,7 +58,7 @@ export default function CalendarSync({ baseUrl, initialToken }: { baseUrl: strin
           ["android", "🤖 Android"],
           ["other", "💻 Autre"],
         ] as const).map(([k, label]) => (
-          <button key={k} type="button" role="tab" className="chip" aria-pressed={tab === k} onClick={() => setTab(k)}>
+          <button key={k} type="button" role="tab" className="chip" aria-selected={tab === k} aria-pressed={undefined} onClick={() => setTab(k)}>
             {label}
           </button>
         ))}

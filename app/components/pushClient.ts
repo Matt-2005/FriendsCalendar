@@ -18,7 +18,7 @@ export function isIOS() {
 
 export function isStandalone() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+  return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 }
 
 function urlBase64ToUint8Array(base64: string) {

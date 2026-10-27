@@ -1,3 +1,4 @@
+import "server-only";
 import webpush from "web-push";
 import { prisma } from "./prisma";
 
@@ -32,7 +33,8 @@ export async function sendPush(userIds: number[], payload: PushPayload) {
             JSON.stringify(payload),
             { TTL: 60 * 60 * 24 }
           );
-        } catch (err: any) {
+        } catch (e) {
+          const err = e as { statusCode?: number; body?: string; message?: string };
           // 404/410 : l'abonnement n'existe plus (appli désinstallée, notifs coupées)
           if (err?.statusCode === 404 || err?.statusCode === 410) expired.push(s.id);
           else console.error("Push error:", err?.statusCode, err?.body ?? err?.message);

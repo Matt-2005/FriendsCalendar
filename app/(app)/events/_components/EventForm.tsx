@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDaysToKey, fromInputs, relativeDayLabel, todayKey, weekdayIndex, fmtTime, dayKey, toInputs } from "@/lib/dates";
 import { eventEmoji } from "@/lib/eventEmoji";
+import { errorMessage } from "@/lib/errors";
 import { useToast } from "../../../components/Toast";
 
 export type EventFormValues = {
@@ -125,8 +126,8 @@ export default function EventForm({
       toast(eventId ? "Modifications enregistrées ✓" : "Sortie proposée ! Les potes sont prévenus 🎉");
       router.replace(`/events/${eventId ?? j.id}`);
       router.refresh();
-    } catch (e: any) {
-      setErr(e?.message || "Pas de connexion, réessaie");
+    } catch (e) {
+      setErr(errorMessage(e, "Pas de connexion, réessaie"));
       setLoading(false);
     }
   }

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Avatar from "../../components/Avatar";
 import { useToast } from "../../components/Toast";
 import ImageCropper from "./ImageCropper";
+import { errorMessage } from "@/lib/errors";
 import styles from "./account.module.css";
 
 export default function AccountForm({
@@ -76,8 +77,8 @@ export default function AccountForm({
       if (!simulating) await updateSession({ avatarUrl: j.url });
       toast("Photo mise à jour ✓");
       router.refresh();
-    } catch (e: any) {
-      toast(e?.message || "L'envoi a échoué");
+    } catch (e) {
+      toast(errorMessage(e, "L'envoi a échoué"));
     } finally {
       setUploading(false);
     }

@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { genCalendarToken } from "@/lib/token";
+import { passwordProblem } from "@/lib/password";
+import { clientIp, rateLimit, tooMany } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  const limit = rateLimit(`register:${await clientIp()}`, 5, 60 * 60 * 1000);
+  if (!limit.ok) return tooMany(limit.retryAfterSec);
+
   const body = await req.json().catch(() => null);
   const email = String(body?.email ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
@@ -15,9 +20,8 @@ export async function POST(req: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Adresse email invalide" }, { status: 400 });
   }
-  if (password.length < 6) {
-    return NextResponse.json({ error: "Le mot de passe doit faire au moins 6 caractères" }, { status: 400 });
-  }
+  const pwError = passwordProblem(password);
+  if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
 
   const exists = await prisma.user.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getMeId } from "@/lib/session";
 import bcrypt from "bcrypt";
+import { passwordProblem } from "@/lib/password";
+import { rateLimit, tooMany } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -14,9 +16,11 @@ export async function PATCH(req: Request) {
   const currentPassword = String(body?.currentPassword ?? "");
   const newPassword = String(body?.newPassword ?? "");
 
-  if (newPassword.length < 6) {
-    return NextResponse.json({ error: "Le nouveau mot de passe doit faire au moins 6 caractères" }, { status: 400 });
-  }
+  const pwError = passwordProblem(newPassword);
+  if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
+
+  const limit = rateLimit(`password:${meId}`, 10, 15 * 60 * 1000);
+  if (!limit.ok) return tooMany(limit.retryAfterSec);
 
   const me = await prisma.user.findUnique({ where: { id: meId }, select: { passwordHash: true } });
   if (!me) return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });

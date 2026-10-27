@@ -1,7 +1,11 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
+  "name": "les-indecis-agenda",
+  "version": "1.0.0",
   "private": true,
+  "description": "Agenda partagé du groupe Les Indécis : sorties, réponses et dispos.",
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:db": "bash scripts/dev-db.sh",
@@ -9,11 +13,13 @@
     "dev:stop": "bash scripts/dev-db.sh stop",
     "build": "prisma migrate deploy && next build --turbopack",
     "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
-    "@prisma/extension-accelerate": "^2.0.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "ical-generator": "^9.0.0",
@@ -22,17 +28,19 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-easy-crop": "^5.5.6",
+    "server-only": "^0.0.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@eslint/eslintrc": "^3.3.7",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20.19.19",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.28",
     "prisma": "^6.16.2",
-    "tailwindcss": "^4",
     "tsx": "^4.20.5",
     "typescript": "^5"
   }

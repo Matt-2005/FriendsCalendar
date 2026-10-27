@@ -1,3 +1,4 @@
+import "server-only";
 import { cache } from "react";
 import { prisma } from "./prisma";
 import { eventEmoji } from "./eventEmoji";

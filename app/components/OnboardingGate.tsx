@@ -106,7 +106,7 @@ const AddIcon = () => (
 function InstallScreen({ onSkip }: { onSkip: () => void }) {
   const ios = isIOS();
   const inApp = isInAppBrowser();
-  const [prompt, setPrompt] = useState<any>(null);
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [help, setHelp] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -114,7 +114,7 @@ function InstallScreen({ onSkip }: { onSkip: () => void }) {
   useEffect(() => {
     const onPrompt = (e: Event) => {
       e.preventDefault();
-      setPrompt(e);
+      setPrompt(e as BeforeInstallPromptEvent);
     };
     const onInstalled = () => setInstalled(true);
     window.addEventListener("beforeinstallprompt", onPrompt);

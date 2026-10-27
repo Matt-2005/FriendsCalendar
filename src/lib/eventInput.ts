@@ -1,3 +1,4 @@
+import "server-only";
 // Validation commune création / modification d'un événement
 export type EventInput = {
   title: string;
@@ -7,7 +8,8 @@ export type EventInput = {
   endDate: Date | null;
 };
 
-export function parseEventInput(body: any): { data?: EventInput; error?: string } {
+export function parseEventInput(input: unknown): { data?: EventInput; error?: string } {
+  const body = (input ?? {}) as Record<string, unknown>;
   const title = String(body?.title ?? "").trim().slice(0, 120);
   const description = String(body?.description ?? "").trim().slice(0, 2000);
   const location = String(body?.location ?? "").trim().slice(0, 200);
