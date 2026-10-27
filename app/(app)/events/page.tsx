@@ -57,7 +57,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
         </Link>
       </header>
 
-      <NotificationsCard />
+      {!me.simulatedBy && <NotificationsCard />}
 
       <nav className="chips" style={{ margin: "18px -16px 16px", padding: "2px 16px" }} aria-label="Filtrer">
         {FILTERS.map((x) => (

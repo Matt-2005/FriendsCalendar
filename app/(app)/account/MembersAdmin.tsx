@@ -12,6 +12,22 @@ export default function MembersAdmin({ members, meId }: { members: Member[]; meI
   const [target, setTarget] = useState<Member | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ pseudo: string; password: string } | null>(null);
+  const [simulating, setSimulating] = useState<number | null>(null);
+
+  async function simulate(m: Member) {
+    setSimulating(m.id);
+    const res = await fetch("/api/admin/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: m.id }),
+    }).catch(() => null);
+    if (!res?.ok) {
+      setSimulating(null);
+      return toast("Impossible de lancer la simulation");
+    }
+    // Rechargement complet pour repartir de zéro avec le profil simulé
+    window.location.href = "/events";
+  }
 
   async function reset() {
     if (!target) return;
@@ -44,9 +60,20 @@ export default function MembersAdmin({ members, meId }: { members: Member[]; meI
               <div className="small muted ellipsis">{m.email}</div>
             </div>
             {m.id !== meId && (
-              <button type="button" className="btn btn-outline btn-sm" onClick={() => setTarget(m)}>
-                Mot de passe
-              </button>
+              <div className="row" style={{ gap: 6, flex: "none" }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => simulate(m)}
+                  disabled={simulating !== null}
+                  aria-label={`Utiliser l'app à la place de ${m.pseudo}`}
+                >
+                  {simulating === m.id ? <span className="spinner" style={{ width: 14, height: 14 }} /> : "👀 Simuler"}
+                </button>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => setTarget(m)} aria-label={`Mot de passe de ${m.pseudo}`}>
+                  🔑
+                </button>
+              </div>
             )}
           </div>
         ))}
