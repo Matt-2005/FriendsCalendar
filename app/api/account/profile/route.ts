@@ -1,71 +1,28 @@
-// app/api/account/profile/route.ts
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getMeId } from "@/lib/session";
+
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
-import { prisma } from "@/lib/prisma";
-
 export async function PUT(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    const userId = session?.user?.id ? Number(session.user.id) : null;
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
+  const meId = await getMeId();
+  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
-    const body = await req.json().catch(() => null);
-    
-    if (!body) {
-      return NextResponse.json({ error: "Données manquantes" }, { status: 400 });
-    }
+  const body = await req.json().catch(() => null);
+  const email = String(body?.email ?? "").trim().toLowerCase();
+  const pseudo = String(body?.pseudo ?? "").trim().slice(0, 40);
 
-    const { email, pseudo } = body;
-
-    // Validation basique
-    if (!email || !pseudo) {
-      return NextResponse.json({ error: "Email et pseudo requis" }, { status: 400 });
-    }
-
-    // Vérifier si l'email est déjà utilisé par un autre utilisateur
-    if (email) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email: email,
-          id: { not: userId }
-        }
-      });
-
-      if (existingUser) {
-        return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 400 });
-      }
-    }
-
-    // Mettre à jour le profil
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        email: email,
-        pseudo: pseudo
-      }
-    });
-
-    console.log("Profil mis à jour:", { userId, email, pseudo });
-
-    return NextResponse.json({ 
-      ok: true, 
-      user: {
-        email: updatedUser.email,
-        pseudo: updatedUser.pseudo
-      }
-    });
-
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour du profil:", error);
-    return NextResponse.json({ 
-      error: "Erreur lors de la mise à jour du profil",
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+  if (!pseudo) return NextResponse.json({ error: "Choisis un prénom ou un pseudo" }, { status: 400 });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: "Adresse email invalide" }, { status: 400 });
   }
+
+  const taken = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" }, id: { not: meId } },
+    select: { id: true },
+  });
+  if (taken) return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
+
+  const user = await prisma.user.update({ where: { id: meId }, data: { email, pseudo } });
+  return NextResponse.json({ ok: true, user: { email: user.email, pseudo: user.pseudo } });
 }

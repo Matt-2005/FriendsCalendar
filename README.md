@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Les Indécis Agenda
 
-## Getting Started
+Une appli web pensée pour le téléphone qui aide un groupe de potes à s'organiser : proposer une sortie, répondre en un geste (j'y vais / peut-être / pas dispo), dire quand on est libre, et retrouver tout ça dans l'agenda de son téléphone.
 
-First, run the development server:
+## Fonctionnalités
+
+- **Sorties** : création rapide (raccourcis « Ce soir », « Demain », « Samedi », heures et durées en un geste), modification, suppression, partage (WhatsApp, SMS…).
+- **Réponses** : J'y vais / Peut-être / Pas dispo, liste de qui vient et de qui n'a pas encore répondu, bouton « Relancer » pour l'organisateur.
+- **Dispos** : on choisit un « pinceau » (Dispo, Pas dispo, Vacances) puis on touche les jours ; raccourci « tous les vendredis et samedis » ; périodes de vacances ; suggestion des **meilleurs jours pour se voir**.
+- **Calendrier** : vue du mois avec les sorties et le nombre de potes dispo par jour.
+- **Agenda du téléphone** : abonnement personnel (Apple Calendar, Google Agenda, Outlook), plus un bouton « Ajouter à mon agenda » par sortie, avec rappels.
+- **Notifications push** : nouvelle sortie, sortie modifiée ou annulée, réponse d'un pote à ta sortie, rappel le jour J et relance la veille.
+- **Appli installable** sur l'écran d'accueil (PWA).
+- **Admin** : un compte `ADMIN` peut créer un mot de passe provisoire pour un membre qui a oublié le sien (depuis son Profil).
+
+## Variables d'environnement
+
+| Variable | Rôle |
+| --- | --- |
+| `DATABASE_URL` | Base PostgreSQL (Prisma) |
+| `NEXTAUTH_SECRET` | Clé de chiffrement des sessions |
+| `NEXTAUTH_URL` | Adresse publique du site, ex. `https://calender.matthewle.fr` |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Photos de profil |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Notifications push. Générer avec `npx web-push generate-vapid-keys` |
+| `CRON_SECRET` | Protège la tâche quotidienne `/api/cron/reminders` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Bouton « Continuer avec Google » (masqué si absentes). Adresse de retour à déclarer chez Google : `https://calender.matthewle.fr/api/auth/callback/google` |
+
+Sans les clés VAPID, l'appli fonctionne normalement, simplement sans notifications.
+
+## Rappels quotidiens
+
+`vercel.json` déclare une tâche planifiée tous les jours à 8 h UTC sur `/api/cron/reminders`. Vercel envoie automatiquement l'en-tête `Authorization: Bearer $CRON_SECRET`. Sur un autre hébergeur, il suffit d'appeler cette adresse une fois par jour avec cet en-tête.
+
+## Développement
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm run build` applique d'abord les migrations Prisma sur la base indiquée par `DATABASE_URL`, puis compile l'appli.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Notifications sur iPhone
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More 
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Apple n'autorise les notifications web qu'aux applis ajoutées à l'écran d'accueil (iOS 16.4 ou plus récent) : Safari → Partager → « Sur l'écran d'accueil ». L'appli affiche ces étapes toute seule aux utilisateurs d'iPhone.
