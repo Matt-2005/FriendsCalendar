@@ -5,6 +5,8 @@ import { getPastEvents, getUpcomingEvents, type EventVM } from "@/lib/queries";
 import EventCard from "./_components/EventCard";
 import Avatar from "../../components/Avatar";
 import NotificationsCard from "../../components/NotificationsCard";
+import RefreshButton from "../../components/RefreshButton";
+import { fmtTime } from "@/lib/dates";
 import { currentSeason, seasonalGreeting } from "@/lib/season";
 
 export const metadata: Metadata = { title: "Sorties" };
@@ -79,6 +81,8 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
           ))}
         </div>
       )}
+
+      <RefreshButton updatedAt={fmtTime(new Date())} />
     </main>
   );
 }

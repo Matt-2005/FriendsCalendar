@@ -4,6 +4,7 @@ import BottomNav from "../components/BottomNav";
 import AppBoot from "../components/AppBoot";
 import SimulationBanner from "../components/SimulationBanner";
 import { ToastProvider } from "../components/Toast";
+import PullToRefresh from "../components/PullToRefresh";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // Les deux requêtes partent en même temps
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       {children}
       <BottomNav pendingCount={pending} />
       <AppBoot />
+      <PullToRefresh />
     </ToastProvider>
   );
 }
