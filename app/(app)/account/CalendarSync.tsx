@@ -48,7 +48,7 @@ export default function CalendarSync({ baseUrl, initialToken }: { baseUrl: strin
   return (
     <div className="card">
       <p className="card-text">
-        Toutes les sorties du groupe apparaissent automatiquement dans le calendrier de ton téléphone, à côté de tes rendez-vous.
+        Toutes les sorties de ton groupe apparaissent automatiquement dans le calendrier de ton téléphone, à côté de tes rendez-vous.
         Celles que tu refuses disparaissent toutes seules.
       </p>
 

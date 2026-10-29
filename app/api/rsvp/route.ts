@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getMe } from "@/lib/session";
+import { canSeeGroup, getMe } from "@/lib/session";
 import { sendPush } from "@/lib/push";
 
 export const runtime = "nodejs";
@@ -28,9 +28,9 @@ export async function POST(req: Request) {
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { id: true, title: true, creatorId: true },
+    select: { id: true, title: true, creatorId: true, groupId: true },
   });
-  if (!event) return NextResponse.json({ error: "Cet événement n'existe plus" }, { status: 404 });
+  if (!event || !canSeeGroup(me, event.groupId)) return NextResponse.json({ error: "Cet événement n'existe plus" }, { status: 404 });
 
   const previous = await prisma.rsvp.findUnique({
     where: { userID_eventID: { userID: me.id, eventID: eventId } },

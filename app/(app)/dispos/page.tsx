@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireMe } from "@/lib/session";
+import { requireGroup } from "@/lib/session";
 import { getAvailabilities, getEventsBetween, getMembers } from "@/lib/queries";
 import { addDaysToKey, currentMonth, dayKey, monthGrid, parisDayEnd, parisDayStart, todayKey } from "@/lib/dates";
 import { indexByDay } from "../_components/dayData";
@@ -8,7 +8,7 @@ import DisposView, { type BestDay } from "./DisposView";
 export const metadata: Metadata = { title: "Mes dispos" };
 
 export default async function DisposPage({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
-  const me = await requireMe();
+  const { me, group } = await requireGroup();
   const { m } = await searchParams;
   const month = m && /^\d{4}-\d{2}$/.test(m) ? m : currentMonth();
   const keys = monthGrid(month).filter(Boolean) as string[];
@@ -20,9 +20,9 @@ export default async function DisposPage({ searchParams }: { searchParams: Promi
   const to = parisDayEnd(keys[keys.length - 1] > horizon[44] ? keys[keys.length - 1] : horizon[44]);
 
   const [availabilities, members, events] = await Promise.all([
-    getAvailabilities(from, to),
-    getMembers(),
-    getEventsBetween(me, parisDayStart(today), parisDayEnd(horizon[44])),
+    getAvailabilities(group.id, from, to),
+    getMembers(group.id),
+    getEventsBetween(me, group.id, parisDayStart(today), parisDayEnd(horizon[44])),
   ]);
 
   // Mon statut jour par jour sur le mois affiché

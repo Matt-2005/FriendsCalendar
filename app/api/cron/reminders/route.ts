@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { sendPush } from "@/lib/push";
 import { dayKey, fmtTime, parisDayEnd, parisDayStart, todayKey, addDaysToKey } from "@/lib/dates";
 import { eventEmoji } from "@/lib/eventEmoji";
+import { groupMemberIds } from "@/lib/groups";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +21,6 @@ export async function GET(req: Request) {
 
   const today = todayKey();
   const tomorrow = addDaysToKey(today, 1);
-  const users = await prisma.user.findMany({ select: { id: true } });
   let sent = 0;
 
   const todays = await prisma.event.findMany({
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
   for (const e of tomorrows) {
     if (dayKey(e.date) !== tomorrow) continue;
     const answered = new Set(e.rsvps.map((r) => r.userID));
-    const pending = users.map((u) => u.id).filter((id) => !answered.has(id));
+    const pending = (await groupMemberIds(e.groupId)).filter((id) => !answered.has(id));
     await sendPush(pending, {
       title: `${eventEmoji(e.title)} Demain : ${e.title}`,
       body: `À ${fmtTime(e.date)}. Tu n'as pas encore dit si tu venais 👀`,

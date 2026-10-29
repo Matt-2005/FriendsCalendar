@@ -1,4 +1,4 @@
-import { getMeId, requireMe } from "@/lib/session";
+import { requireGroup } from "@/lib/session";
 import { countPendingFor } from "@/lib/queries";
 import BottomNav from "../components/BottomNav";
 import AppBoot from "../components/AppBoot";
@@ -7,11 +7,9 @@ import { ToastProvider } from "../components/Toast";
 import PullToRefresh from "../components/PullToRefresh";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  // Les deux requêtes partent en même temps
-  const [me, pending] = await Promise.all([
-    requireMe(),
-    getMeId().then((id) => (id ? countPendingFor(id) : 0)),
-  ]);
+  // Pas encore dans un groupe → écran « Rejoindre un groupe »
+  const { me, group } = await requireGroup();
+  const pending = await countPendingFor(me.id, group.id);
   return (
     <ToastProvider>
       {me.simulatedBy && <SimulationBanner user={me} adminPseudo={me.simulatedBy.pseudo} />}

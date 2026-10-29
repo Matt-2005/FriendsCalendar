@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { requireMe } from "@/lib/session";
+import { isSuperAdmin, requireGroup } from "@/lib/session";
+import { getGroupMembers, getMembers, getSwitchableGroups } from "@/lib/queries";
 import { prisma } from "@/lib/prisma";
 import { getBaseUrl } from "@/lib/url";
 import AccountForm from "./AccountForm";
 import CalendarSync from "./CalendarSync";
 import PasswordForm from "./PasswordForm";
 import LogoutButton from "./LogoutButton";
-import MembersAdmin from "./MembersAdmin";
+import GroupAdmin from "./GroupAdmin";
+import AllGroups from "./AllGroups";
 import DecoToggle from "./DecoToggle";
 import { cookies } from "next/headers";
 import { currentSeason, DECO_COOKIE } from "@/lib/season";
@@ -15,15 +17,17 @@ import NotificationsCard from "../../components/NotificationsCard";
 export const metadata: Metadata = { title: "Profil" };
 
 export default async function AccountPage() {
-  const me = await requireMe();
+  const { me, group } = await requireGroup();
+  const superAdmin = isSuperAdmin(me);
   const season = currentSeason();
   const decoOn = (await cookies()).get(DECO_COOKIE)?.value !== "off";
-  const [{ calendarToken, passwordHash }, baseUrl, members] = await Promise.all([
+  const [{ calendarToken, passwordHash }, baseUrl, admin, memberList, allGroups] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: me.id }, select: { calendarToken: true, passwordHash: true } }),
     getBaseUrl(),
-    me.role === "ADMIN"
-      ? prisma.user.findMany({ select: { id: true, pseudo: true, email: true, avatarUrl: true }, orderBy: { pseudo: "asc" } })
-      : Promise.resolve([]),
+    // Liste détaillée et demandes : seulement pour les admins du groupe
+    group.canManage ? getGroupMembers(group.id) : Promise.resolve({ members: [], pending: [] }),
+    group.canManage ? Promise.resolve([]) : getMembers(group.id),
+    superAdmin ? getSwitchableGroups(me) : Promise.resolve([]),
   ]);
 
   return (
@@ -44,6 +48,22 @@ export default async function AccountPage() {
         initialAvatarUrl={me.avatarUrl ?? ""}
         simulating={Boolean(me.simulatedBy)}
       />
+
+      <section className="section" id="groupe">
+        <h2 className="section-title">
+          <span>👥 {group.name}</span>
+          {group.myRole === "MANAGER" && !superAdmin && <span className="badge badge-yes">⭐ Tu es admin</span>}
+        </h2>
+        <GroupAdmin
+          group={group}
+          baseUrl={baseUrl}
+          members={admin.members}
+          pending={admin.pending}
+          memberCount={group.canManage ? admin.members.length : memberList.length}
+          meId={me.id}
+          superAdmin={superAdmin}
+        />
+      </section>
 
       {!me.simulatedBy && (
       <section className="section">
@@ -76,10 +96,10 @@ export default async function AccountPage() {
         </section>
       )}
 
-      {me.role === "ADMIN" && (
-        <section className="section">
-          <h2 className="section-title">👑 Membres du groupe · {members.length}</h2>
-          <MembersAdmin members={members} meId={me.id} />
+      {superAdmin && !me.simulatedBy && (
+        <section className="section" id="groupes">
+          <h2 className="section-title">👑 Tous les groupes · {allGroups.length}</h2>
+          <AllGroups groups={allGroups} currentId={group.id} />
         </section>
       )}
 

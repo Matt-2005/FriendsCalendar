@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getMeId } from "@/lib/session";
+import { canSeeGroup, getMe } from "@/lib/session";
 import { getBaseUrl } from "@/lib/url";
 import { addEvent, icsResponse, newCalendar, type MyStatus } from "@/lib/ics";
 
@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 
 // Fichier .ics d'un seul événement : "Ajouter à mon agenda" (garde les rappels sur iPhone)
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const meId = await getMeId();
-  if (!meId) return NextResponse.redirect(new URL("/login", await getBaseUrl()));
+  const me = await getMe();
+  const meId = me?.id;
+  if (!me || !meId) return NextResponse.redirect(new URL("/login", await getBaseUrl()));
 
   const raw = (await ctx.params).id.replace(/\.ics$/, "");
   const event = await prisma.event.findUnique({
@@ -21,7 +22,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
       rsvps: { where: { userID: meId }, select: { status: true } },
     },
   });
-  if (!event) return NextResponse.json({ error: "Événement introuvable" }, { status: 404 });
+  if (!event || !canSeeGroup(me, event.groupId)) {
+    return NextResponse.json({ error: "Événement introuvable" }, { status: 404 });
+  }
 
   const cal = newCalendar(event.title);
   // On l'ajoute comme "J'y vais" pour avoir les rappels, sauf si on a dit "peut-être"

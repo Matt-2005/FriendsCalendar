@@ -19,53 +19,96 @@ enum RSVPStatus {
   MAYBE
 }
 
+// ADMIN = super admin de toute l'appli (unique). Les admins de groupe sont dans Membership.role
 enum UserRole {
   USER
   ADMIN
 }
 
+enum GroupRole {
+  MEMBER
+  MANAGER // "admin du groupe" : accepte les membres, gère les sorties du groupe
+}
+
+enum MembershipStatus {
+  PENDING // demande envoyée, en attente d'un admin du groupe
+  ACTIVE
+}
+
+// Un groupe d'amis / une organisation, avec son code pour le rejoindre
+model Group {
+  id          Int          @id @default(autoincrement())
+  name        String
+  code        String       @unique
+  createdAt   DateTime     @default(now())
+  memberships Membership[]
+  events      Event[]
+  activeFor   User[]       @relation("ActiveGroup")
+}
+
+model Membership {
+  userId    Int
+  groupId   Int
+  role      GroupRole        @default(MEMBER)
+  status    MembershipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+  @@index([groupId, status])
+}
+
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique
-  passwordHash String
-  pseudo String
-  avatarUrl String?
-  role UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  events Event[] @relation("UserEvents")
-  rsvps Rsvp[]
-  calendarToken String @unique
-  availabilities Availability[]
+  id                Int                @id @default(autoincrement())
+  email             String             @unique
+  passwordHash      String
+  pseudo            String
+  avatarUrl         String?
+  role              UserRole           @default(USER)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  events            Event[]            @relation("UserEvents")
+  rsvps             Rsvp[]
+  calendarToken     String             @unique
+  availabilities    Availability[]
   pushSubscriptions PushSubscription[]
+  memberships       Membership[]
+  // Groupe affiché dans l'appli (on peut en changer)
+  activeGroupId     Int?
+  activeGroup       Group?             @relation("ActiveGroup", fields: [activeGroupId], references: [id], onDelete: SetNull)
 }
 
 model Event {
-  id Int @id @default(autoincrement())
-  title String
-  description String
-  date DateTime
-  endDate DateTime?
-  location String
-  participantsID Int[] 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  creator User @relation("UserEvents", fields: [creatorId], references: [id])
-  creatorId Int
-  rsvps Rsvp[]
+  id             Int       @id @default(autoincrement())
+  title          String
+  description    String
+  date           DateTime
+  endDate        DateTime?
+  location       String
+  participantsID Int[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  creator        User      @relation("UserEvents", fields: [creatorId], references: [id])
+  creatorId      Int
+  group          Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId        Int
+  rsvps          Rsvp[]
   // Rappel "c'est aujourd'hui" déjà envoyé (évite les doublons du cron)
   reminderSentAt DateTime?
 
   @@index([date])
+  @@index([groupId, date])
 }
 
 model Rsvp {
-  userID Int
-  eventID Int
-  status RSVPStatus @default(NO)
-  updatedAt DateTime @updatedAt
+  userID    Int
+  eventID   Int
+  status    RSVPStatus @default(NO)
+  updatedAt DateTime   @updatedAt
 
-  user User @relation(fields: [userID], references: [id])
+  user  User  @relation(fields: [userID], references: [id])
   event Event @relation(fields: [eventID], references: [id], onDelete: Cascade)
 
   @@id([userID, eventID])
@@ -79,17 +122,17 @@ enum AvailabilityType {
 }
 
 model Availability {
-  id Int @id @default(autoincrement())
-  userId Int
+  id        Int              @id @default(autoincrement())
+  userId    Int
   startDate DateTime
-  endDate DateTime
-  type AvailabilityType @default(AVAILABLE)
-  note String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  endDate   DateTime
+  type      AvailabilityType @default(AVAILABLE)
+  note      String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([startDate, endDate])
 }

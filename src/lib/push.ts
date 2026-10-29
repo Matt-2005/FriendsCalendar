@@ -46,9 +46,3 @@ export async function sendPush(userIds: number[], payload: PushPayload) {
     console.error("sendPush failed:", err);
   }
 }
-
-/** Tous les membres sauf ceux exclus. */
-export async function allUserIdsExcept(...exclude: number[]) {
-  const users = await prisma.user.findMany({ select: { id: true } });
-  return users.map((u) => u.id).filter((id) => !exclude.includes(id));
-}

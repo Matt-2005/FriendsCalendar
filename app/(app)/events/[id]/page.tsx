@@ -27,7 +27,7 @@ export default async function EventPage({ params }: Props) {
   const event = await getEvent(me, Number((await params).id));
   if (!event) notFound();
 
-  const [members, baseUrl] = await Promise.all([getMembers(), getBaseUrl()]);
+  const [members, baseUrl] = await Promise.all([getMembers(event.groupId), getBaseUrl()]);
   const answered = new Set([...event.yes, ...event.maybe, ...event.no].map((u) => u.id));
   const pending = members.filter((m) => !answered.has(m.id));
 
@@ -63,6 +63,7 @@ export default async function EventPage({ params }: Props) {
         <div className={styles.heroBy}>
           <Avatar user={event.creator} size={22} />
           Proposé par {event.creator.id === me.id ? "toi" : event.creator.pseudo}
+          {me.memberships.length > 1 && <span className="badge badge-neutral">👥 {event.groupName}</span>}
         </div>
       </section>
 

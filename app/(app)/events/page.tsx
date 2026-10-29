@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { requireMe } from "@/lib/session";
+import { isSuperAdmin, requireGroup } from "@/lib/session";
 import { getPastEvents, getUpcomingEvents, type EventVM } from "@/lib/queries";
 import EventCard from "./_components/EventCard";
 import Avatar from "../../components/Avatar";
 import NotificationsCard from "../../components/NotificationsCard";
 import RefreshButton from "../../components/RefreshButton";
+import GroupSwitcher from "../../components/GroupSwitcher";
+import { getSwitchableGroups } from "@/lib/queries";
 import { fmtTime } from "@/lib/dates";
 import { currentSeason, seasonalGreeting } from "@/lib/season";
 
@@ -21,15 +23,15 @@ const FILTERS = [
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 export default async function EventsPage({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
-  const me = await requireMe();
+  const { me, group } = await requireGroup();
   const { f } = await searchParams;
   const filter: FilterKey = FILTERS.some((x) => x.key === f) ? (f as FilterKey) : "all";
 
-  const upcoming = await getUpcomingEvents(me);
+  const [upcoming, groups] = await Promise.all([getUpcomingEvents(me, group.id), getSwitchableGroups(me)]);
   const todoCount = upcoming.filter((e) => e.myStatus === null).length;
 
   let list: EventVM[];
-  if (filter === "past") list = await getPastEvents(me);
+  if (filter === "past") list = await getPastEvents(me, group.id);
   else if (filter === "todo") list = upcoming.filter((e) => e.myStatus === null);
   else if (filter === "going") list = upcoming.filter((e) => e.myStatus === "YES" || e.myStatus === "MAYBE");
   else if (filter === "mine") list = upcoming.filter((e) => e.creator.id === me.id);
@@ -39,6 +41,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     <main className="page">
       <header className="page-header">
         <div>
+          <GroupSwitcher current={group} groups={groups} superAdmin={isSuperAdmin(me)} />
           <h1 className="page-title">
             {seasonalGreeting(me.pseudo, currentSeason())}
           </h1>

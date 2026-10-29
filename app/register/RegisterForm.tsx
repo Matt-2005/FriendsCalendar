@@ -7,7 +7,17 @@ import styles from "../auth.module.css";
 import { errorMessage } from "@/lib/errors";
 import GoogleButton, { OrSeparator } from "../components/GoogleButton";
 
-export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
+export default function RegisterForm({
+  googleEnabled,
+  initialCode = "",
+  groupName,
+}: {
+  googleEnabled: boolean;
+  initialCode?: string;
+  /** Arrivé par un lien d'invitation : le code est déjà rempli */
+  groupName?: string;
+}) {
+  const [code, setCode] = useState(initialCode);
   const [pseudo, setPseudo] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +33,7 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pseudo, email, password }),
+        body: JSON.stringify({ code, pseudo, email, password }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Erreur serveur");
@@ -46,13 +56,43 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
         <div className={styles.logo}>
           <img src="/logoCalendrier.png" alt="" />
         </div>
-        <h1 className={styles.title}>Bienvenue dans la bande</h1>
+        <h1 className={styles.title}>{groupName ? `Rejoins ${groupName}` : "Bienvenue dans la bande"}</h1>
         <p className={styles.subtitle}>Crée ton compte en 20 secondes.</p>
 
         <form onSubmit={onSubmit} className={styles.card}>
+          {groupName ? (
+            <div className="alert alert-info" style={{ marginBottom: 16 }}>
+              👥 Groupe : <strong>{groupName}</strong>
+            </div>
+          ) : (
+            <div className="field">
+              <label htmlFor="code" className="label">Code du groupe</label>
+              <input
+                id="code"
+                className="input code-input"
+                placeholder="ABC123"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                autoCapitalize="characters"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                maxLength={16}
+                enterKeyHint="next"
+                required
+              />
+              <span className="hint">Demande-le à l'organisateur de ton groupe.</span>
+            </div>
+          )}
           {googleEnabled && (
             <>
-              <GoogleButton callbackUrl="/events" label="S'inscrire avec Google" />
+              <div style={{ marginTop: groupName ? 0 : 16 }}>
+                <GoogleButton
+                  // Avec Google, le code est demandé juste après la connexion (ou repris du lien)
+                  callbackUrl={code.trim() ? `/join/${encodeURIComponent(code.trim())}` : "/join"}
+                  label="S'inscrire avec Google"
+                />
+              </div>
               <OrSeparator />
             </>
           )}
@@ -114,7 +154,7 @@ export default function RegisterForm({ googleEnabled }: { googleEnabled: boolean
 
           <button
             type="submit"
-            disabled={loading || !pseudo.trim() || !email || password.length < 8}
+            disabled={loading || code.trim().length < 4 || !pseudo.trim() || !email || password.length < 8}
             className="btn btn-primary btn-lg btn-block"
             style={{ marginTop: 18 }}
           >

@@ -46,10 +46,13 @@ export type PlaceSuggestions = {
 export default function EventForm({
   initial,
   eventId,
+  groupId,
   places,
 }: {
   initial?: Partial<EventFormValues>;
   eventId?: number;
+  /** Groupe de la nouvelle sortie (celui affiché quand le formulaire a été ouvert) */
+  groupId?: number;
   places?: PlaceSuggestions;
 }) {
   const router = useRouter();
@@ -119,6 +122,7 @@ export default function EventForm({
           description: v.description.trim(),
           date: start.toISOString(),
           endDate: end ? end.toISOString() : null,
+          ...(eventId ? {} : { groupId }),
         }),
       });
       const j = await res.json().catch(() => ({}));

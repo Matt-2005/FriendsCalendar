@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getMeId } from "@/lib/session";
+import { getGroup, getMeId } from "@/lib/session";
 import { isAvailType, rangeFromKeys } from "@/lib/availability";
 import { dayKey } from "@/lib/dates";
 
@@ -10,11 +10,14 @@ export const dynamic = "force-dynamic";
 const KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function GET() {
-  const meId = await getMeId();
-  if (!meId) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  const group = await getGroup();
+  if (!group) return NextResponse.json({ error: "Non connecté" }, { status: 401 });
 
   const availabilities = await prisma.availability.findMany({
-    where: { endDate: { gte: new Date(Date.now() - 31 * 24 * 3600e3) } },
+    where: {
+      endDate: { gte: new Date(Date.now() - 31 * 24 * 3600e3) },
+      user: { memberships: { some: { groupId: group.id, status: "ACTIVE" } } },
+    },
     include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } },
     orderBy: { startDate: "asc" },
   });

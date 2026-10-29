@@ -11,8 +11,9 @@ export const metadata: Metadata = { title: "Modifier la sortie" };
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const me = await requireMe();
   const id = Number((await params).id);
-  const [event, places] = await Promise.all([getEvent(me, id), getPlaceSuggestions(me.id)]);
+  const event = await getEvent(me, id);
   if (!event) notFound();
+  const places = await getPlaceSuggestions(me.id, event.groupId);
   if (!event.canManage) redirect(`/events/${id}`);
 
   const s = toInputs(event.start);

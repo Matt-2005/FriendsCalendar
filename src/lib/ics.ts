@@ -20,7 +20,7 @@ const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000;
 export function newCalendar(name = "Les Indécis") {
   return ical({
     name,
-    description: "Les sorties du groupe — Les Indécis Agenda",
+    description: `Les sorties du groupe ${name} — Les Indécis Agenda`,
     prodId: { company: "lesindecis", product: "agenda", language: "FR" },
     // Pas de fuseau "flottant" : heures écrites en UTC (suffixe Z), les agendas convertissent tout seuls
     method: ICalCalendarMethod.PUBLISH,
@@ -34,7 +34,7 @@ export function newCalendar(name = "Les Indécis") {
  * - "Peut-être" : événement provisoire, préfixé 🤔
  * - Sans réponse : préfixé ❓ pour inviter à répondre
  */
-export function addEvent(cal: ICalCalendar, e: IcsEvent, status: MyStatus, baseUrl: string) {
+export function addEvent(cal: ICalCalendar, e: IcsEvent, status: MyStatus, baseUrl: string, groupName?: string) {
   const url = `${baseUrl}/events/${e.id}`;
   const prefix = status === "MAYBE" ? "🤔 " : status === null ? "❓ " : "";
   const footer =
@@ -47,7 +47,11 @@ export function addEvent(cal: ICalCalendar, e: IcsEvent, status: MyStatus, baseU
     start: e.date,
     end: e.endDate ?? new Date(e.date.getTime() + DEFAULT_DURATION_MS),
     summary: `${prefix}${eventEmoji(e.title)} ${e.title}`,
-    description: [e.description, e.creator ? `Organisé par ${e.creator.pseudo}` : "", footer]
+    description: [
+      e.description,
+      [e.creator ? `Organisé par ${e.creator.pseudo}` : "", groupName ? `Groupe : ${groupName}` : ""].filter(Boolean).join(" · "),
+      footer,
+    ]
       .filter(Boolean)
       .join("\n\n"),
     location: e.location || undefined,

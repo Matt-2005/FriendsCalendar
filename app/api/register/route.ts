@@ -4,6 +4,9 @@ import bcrypt from "bcrypt";
 import { genCalendarToken } from "@/lib/token";
 import { passwordProblem } from "@/lib/password";
 import { clientIp, rateLimit, tooMany } from "@/lib/rateLimit";
+import { findGroupByCode, groupManagerIds } from "@/lib/groups";
+import { sendPush } from "@/lib/push";
+import { after } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -16,6 +19,10 @@ export async function POST(req: Request) {
   const password = String(body?.password ?? "");
   const pseudo = String(body?.pseudo ?? "").trim().slice(0, 40);
 
+  const group = await findGroupByCode(body?.code);
+  if (!group) {
+    return NextResponse.json({ error: "Code de groupe inconnu. Demande-le à l'organisateur de ton groupe." }, { status: 400 });
+  }
   if (!pseudo) return NextResponse.json({ error: "Indique ton prénom ou ton pseudo" }, { status: 400 });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Adresse email invalide" }, { status: 400 });
@@ -32,10 +39,26 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prisma.user.create({
-      data: { email, pseudo, passwordHash: await bcrypt.hash(password, 12), calendarToken: genCalendarToken() },
+    const user = await prisma.user.create({
+      data: {
+        email,
+        pseudo,
+        passwordHash: await bcrypt.hash(password, 12),
+        calendarToken: genCalendarToken(),
+        // Demande pour rejoindre le groupe : un admin du groupe doit l'accepter
+        memberships: { create: { groupId: group.id, status: "PENDING" } },
+      },
+      select: { id: true },
     });
-    return NextResponse.json({ ok: true }, { status: 201 });
+    after(async () =>
+      sendPush(await groupManagerIds(group.id), {
+        title: `👋 ${pseudo} veut rejoindre ${group.name}`,
+        body: "Touche pour accepter ou refuser sa demande.",
+        url: "/account#groupe",
+        tag: `join-${group.id}-${user.id}`,
+      })
+    );
+    return NextResponse.json({ ok: true, group: group.name }, { status: 201 });
   } catch (err) {
     console.error("REGISTER_API_ERROR:", err);
     return NextResponse.json({ error: "Erreur serveur, réessaie" }, { status: 500 });

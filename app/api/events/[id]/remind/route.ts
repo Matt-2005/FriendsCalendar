@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getMe, canManageEvent } from "@/lib/session";
 import { sendPush, pushEnabled } from "@/lib/push";
 import { rateLimit, tooMany } from "@/lib/rateLimit";
+import { groupMemberIds } from "@/lib/groups";
 import { eventWhen } from "@/lib/dates";
 import { eventEmoji } from "@/lib/eventEmoji";
 
@@ -26,8 +27,7 @@ export async function POST(_req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!limit.ok) return tooMany(limit.retryAfterSec);
 
   const answered = new Set(event.rsvps.map((r) => r.userID));
-  const users = await prisma.user.findMany({ select: { id: true } });
-  const pending = users.map((u) => u.id).filter((id) => !answered.has(id) && id !== me.id);
+  const pending = (await groupMemberIds(event.groupId, me.id)).filter((id) => !answered.has(id));
 
   await sendPush(pending, {
     title: `${eventEmoji(event.title)} ${event.title}`,

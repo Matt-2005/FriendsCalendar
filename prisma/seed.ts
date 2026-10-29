@@ -20,7 +20,9 @@ async function main() {
   await prisma.rsvp.deleteMany();
   await prisma.availability.deleteMany();
   await prisma.event.deleteMany();
+  await prisma.membership.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.group.deleteMany();
 
   const passwordHash = await bcrypt.hash("demo1234", 10);
   const mk = (pseudo: string, role: "USER" | "ADMIN" = "USER") =>
@@ -38,9 +40,23 @@ async function main() {
   const tom = await mk("Tom");
   const nina = await mk("Nina");
   const hugo = await mk("Hugo");
+  // Autre groupe + une personne qui attend d'être acceptée
+  const sarah = await mk("Sarah");
+  const paul = await mk("Paul");
+  const julie = await mk("Julie");
 
-  const ev = (creatorId: number, title: string, date: Date, endDate: Date | null, location = "", description = "") =>
-    prisma.event.create({ data: { creatorId, title, date, endDate, location, description } });
+  const indecis = await prisma.group.create({ data: { name: "Les Indécis", code: "INDECIS" } });
+  const rando = await prisma.group.create({ data: { name: "Club de rando", code: "RANDO7" } });
+  const member = (groupId: number, userId: number, role: "MEMBER" | "MANAGER" = "MEMBER", status: "ACTIVE" | "PENDING" = "ACTIVE") =>
+    prisma.membership.create({ data: { groupId, userId, role, status } });
+  for (const u of [matthew, lea, tom, nina, hugo]) await member(indecis.id, u.id, u === lea ? "MANAGER" : "MEMBER");
+  await member(indecis.id, julie.id, "MEMBER", "PENDING");
+  await member(rando.id, sarah.id, "MANAGER");
+  await member(rando.id, paul.id);
+  await member(rando.id, tom.id); // Tom est dans les deux groupes
+
+  const ev = (creatorId: number, title: string, date: Date, endDate: Date | null, location = "", description = "", groupId = indecis.id) =>
+    prisma.event.create({ data: { creatorId, title, date, endDate, location, description, groupId } });
   const rsvp = (eventID: number, userID: number, status: "YES" | "NO" | "MAYBE") =>
     prisma.rsvp.create({ data: { eventID, userID, status } });
 
@@ -66,6 +82,10 @@ async function main() {
   await rsvp(passe.id, hugo.id, "YES");
   await rsvp(passe.id, matthew.id, "YES");
 
+  const rando1 = await ev(sarah.id, "Rando en forêt de Fontainebleau", at(2, 9), at(2, 17), "Gare de Lyon", "Prévoir pique-nique et bonnes chaussures", rando.id);
+  await rsvp(rando1.id, sarah.id, "YES");
+  await rsvp(rando1.id, paul.id, "YES");
+
   // Quelques dispos pour remplir le calendrier
   const dispo = (userId: number, from: number, to: number, type: "AVAILABLE" | "BUSY" | "VACATION", note?: string) =>
     prisma.availability.create({
@@ -77,7 +97,8 @@ async function main() {
   await dispo(hugo.id, 7, 8, "BUSY");
   await dispo(nina.id, 14, 20, "VACATION", "Ski");
 
-  console.log("✅ 5 potes de démo (mot de passe : demo1234), 5 sorties, des dispos.");
+  console.log("✅ 2 groupes (codes INDECIS et RANDO7), 8 comptes (mot de passe : demo1234), des sorties et des dispos.");
+  console.log("   Léa est admin des Indécis, Sarah du Club de rando, Julie attend d'être acceptée.");
 }
 
 main().finally(() => prisma.$disconnect());

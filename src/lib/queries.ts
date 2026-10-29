@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { prisma } from "./prisma";
 import { eventEmoji } from "./eventEmoji";
-import type { Me } from "./session";
+import { canManageEvent, canSeeGroup, isSuperAdmin, type Me } from "./session";
 
 export type UserVM = { id: number; pseudo: string; avatarUrl: string | null };
 export type Status = "YES" | "MAYBE" | "NO";
@@ -21,6 +21,8 @@ export type EventVM = {
   no: UserVM[];
   myStatus: Status | null;
   canManage: boolean;
+  groupId: number;
+  groupName: string;
 };
 
 const userSelect = { id: true, pseudo: true, avatarUrl: true } as const;
@@ -44,6 +46,7 @@ function fetchRows(where: object, order: "asc" | "desc" = "asc", take = 200) {
     take,
     include: {
       creator: { select: userSelect },
+      group: { select: { name: true } },
       rsvps: { select: { status: true, userID: true, user: { select: userSelect } }, orderBy: { updatedAt: "asc" } },
     },
   });
@@ -64,18 +67,20 @@ function toVM(e: Row, me: Me): EventVM {
     maybe: by("MAYBE"),
     no: by("NO"),
     myStatus: (e.rsvps.find((r) => r.userID === me.id)?.status as Status) ?? null,
-    canManage: me.id === e.creatorId || me.role === "ADMIN",
+    canManage: canManageEvent(me, e),
+    groupId: e.groupId,
+    groupName: e.group.name,
   };
 }
 
-export async function getUpcomingEvents(me: Me) {
-  return (await fetchRows(upcomingWhere())).map((e) => toVM(e, me));
+export async function getUpcomingEvents(me: Me, groupId: number) {
+  return (await fetchRows({ groupId, ...upcomingWhere() })).map((e) => toVM(e, me));
 }
 
-export async function getPastEvents(me: Me, take = 30) {
+export async function getPastEvents(me: Me, groupId: number, take = 30) {
   const now = new Date();
   const rows = await fetchRows(
-    { NOT: upcomingWhere(now), date: { lt: now } },
+    { groupId, NOT: upcomingWhere(now), date: { lt: now } },
     "desc",
     take
   );
@@ -83,8 +88,9 @@ export async function getPastEvents(me: Me, take = 30) {
 }
 
 /** Événements d'une période (pour le calendrier) */
-export async function getEventsBetween(me: Me, from: Date, to: Date) {
+export async function getEventsBetween(me: Me, groupId: number, from: Date, to: Date) {
   const rows = await fetchRows({
+    groupId,
     date: { lte: to },
     OR: [{ endDate: { gte: from } }, { endDate: null, date: { gte: from } }],
   });
@@ -94,19 +100,25 @@ export async function getEventsBetween(me: Me, from: Date, to: Date) {
 // cache() : une seule requête par affichage, même si le titre de la page et la page la demandent
 const getEventRow = cache(async (id: number) => (await fetchRows({ id }, "asc", 1))[0] ?? null);
 
+/** Une sortie, seulement si on a accès à son groupe (sinon « introuvable ») */
 export async function getEvent(me: Me, id: number) {
   if (!Number.isInteger(id)) return null;
   const row = await getEventRow(id);
-  return row ? toVM(row, me) : null;
+  return row && canSeeGroup(me, row.groupId) ? toVM(row, me) : null;
 }
 
-export const getMembers = cache(async (): Promise<UserVM[]> =>
-  prisma.user.findMany({ select: userSelect, orderBy: { pseudo: "asc" } })
+/** Membres acceptés d'un groupe */
+export const getMembers = cache(async (groupId: number): Promise<UserVM[]> =>
+  prisma.user.findMany({
+    where: { memberships: { some: { groupId, status: "ACTIVE" } } },
+    select: userSelect,
+    orderBy: { pseudo: "asc" },
+  })
 );
 
-export async function countPendingFor(meId: number) {
+export async function countPendingFor(meId: number, groupId: number) {
   return prisma.event.count({
-    where: { ...upcomingWhere(), rsvps: { none: { userID: meId } } },
+    where: { groupId, ...upcomingWhere(), rsvps: { none: { userID: meId } } },
   });
 }
 
@@ -120,9 +132,14 @@ export type AvailabilityVM = {
   user: UserVM;
 };
 
-export async function getAvailabilities(from: Date, to: Date): Promise<AvailabilityVM[]> {
+/** Dispos des membres d'un groupe (les dispos sont personnelles : les mêmes dans tous ses groupes) */
+export async function getAvailabilities(groupId: number, from: Date, to: Date): Promise<AvailabilityVM[]> {
   const rows = await prisma.availability.findMany({
-    where: { startDate: { lte: to }, endDate: { gte: from } },
+    where: {
+      startDate: { lte: to },
+      endDate: { gte: from },
+      user: { memberships: { some: { groupId, status: "ACTIVE" } } },
+    },
     include: { user: { select: userSelect } },
     orderBy: { startDate: "asc" },
   });
@@ -138,11 +155,11 @@ export async function getAvailabilities(from: Date, to: Date): Promise<Availabil
 }
 
 /** Raccourcis pour le champ "Où ?" : chez chaque membre + lieux récents */
-export async function getPlaceSuggestions(meId: number) {
+export async function getPlaceSuggestions(meId: number, groupId: number) {
   const [members, recentRows] = await Promise.all([
-    getMembers(),
+    getMembers(groupId),
     prisma.event.findMany({
-      where: { location: { not: "" } },
+      where: { groupId, location: { not: "" } },
       select: { location: true },
       orderBy: { date: "desc" },
       take: 40,
@@ -164,4 +181,52 @@ export async function getPlaceSuggestions(meId: number) {
     if (recent.length === 4) break;
   }
   return { hosts, recent };
+}
+
+export type GroupChoice = { id: number; name: string; isMember: boolean; members: number; pending: number };
+
+/** Groupes entre lesquels on peut basculer : les siens, ou tous pour le super admin */
+export const getSwitchableGroups = cache(async (me: Me): Promise<GroupChoice[]> => {
+  const mine = new Set(me.memberships.map((m) => m.groupId));
+  const rows = await prisma.group.findMany({
+    where: isSuperAdmin(me) ? {} : { id: { in: [...mine] } },
+    select: { id: true, name: true, memberships: { select: { status: true } } },
+    orderBy: { name: "asc" },
+  });
+  return rows.map((g) => ({
+    id: g.id,
+    name: g.name,
+    isMember: mine.has(g.id),
+    members: g.memberships.filter((m) => m.status === "ACTIVE").length,
+    pending: g.memberships.filter((m) => m.status === "PENDING").length,
+  }));
+});
+
+export type GroupMemberVM = UserVM & { email: string; role: "MEMBER" | "MANAGER"; isSuperAdmin: boolean; since: string };
+
+/** Membres et demandes en attente d'un groupe (écran d'administration) */
+export async function getGroupMembers(groupId: number) {
+  const rows = await prisma.membership.findMany({
+    where: { groupId },
+    select: {
+      role: true,
+      status: true,
+      createdAt: true,
+      user: { select: { ...userSelect, email: true, role: true } },
+    },
+    orderBy: [{ user: { pseudo: "asc" } }],
+  });
+  const vm = (r: (typeof rows)[number]): GroupMemberVM => ({
+    id: r.user.id,
+    pseudo: r.user.pseudo,
+    avatarUrl: r.user.avatarUrl,
+    email: r.user.email,
+    role: r.role,
+    isSuperAdmin: r.user.role === "ADMIN",
+    since: r.createdAt.toISOString(),
+  });
+  return {
+    members: rows.filter((r) => r.status === "ACTIVE").map(vm),
+    pending: rows.filter((r) => r.status === "PENDING").map(vm),
+  };
 }
