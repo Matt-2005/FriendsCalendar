@@ -17,11 +17,11 @@ export type MyStatus = "YES" | "NO" | "MAYBE" | null;
 
 const DEFAULT_DURATION_MS = 2 * 60 * 60 * 1000;
 
-export function newCalendar(name = "Les Indécis") {
+export function newCalendar(name = "Ziva") {
   return ical({
     name,
-    description: `Les sorties du groupe ${name} — Les Indécis Agenda`,
-    prodId: { company: "lesindecis", product: "agenda", language: "FR" },
+    description: "Les sorties de ta bande — Ziva",
+    prodId: { company: "ziva", product: "agenda", language: "FR" },
     // Pas de fuseau "flottant" : heures écrites en UTC (suffixe Z), les agendas convertissent tout seuls
     method: ICalCalendarMethod.PUBLISH,
     ttl: 60 * 15,
@@ -43,6 +43,7 @@ export function addEvent(cal: ICalCalendar, e: IcsEvent, status: MyStatus, baseU
       : `Voir qui vient / changer ma réponse 👉 ${url}`;
 
   const ev = cal.createEvent({
+    // Identifiant historique : ne jamais le changer, sinon les agendas dupliquent toutes les sorties
     id: `event-${e.id}@lesindecis.fr`,
     start: e.date,
     end: e.endDate ?? new Date(e.date.getTime() + DEFAULT_DURATION_MS),

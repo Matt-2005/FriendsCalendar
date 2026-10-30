@@ -64,7 +64,7 @@ export default function GroupAdmin({
   const membersUrl = (m: Member) => `/api/groups/${group.id}/members/${m.id}`;
 
   async function share() {
-    const text = `Rejoins « ${group.name} » sur Les Indécis pour voir les sorties et dire si tu viens 👉`;
+    const text = `Rejoins « ${group.name} » sur Ziva pour voir les sorties et dire si tu viens 👉`;
     if (navigator.share) {
       try {
         await navigator.share({ title: group.name, text, url: inviteUrl });

@@ -79,7 +79,7 @@ export default function CalendarSync({ baseUrl, initialToken }: { baseUrl: strin
           <details className="details">
             <summary>Recevoir les rappels du calendrier</summary>
             <p>
-              Par défaut l'iPhone ignore les alertes des calendriers abonnés. Pour les garder : <strong>Réglages → Calendrier → Comptes → Calendriers avec abonnement → Les Indécis</strong>, puis désactive « Supprimer les alarmes ».
+              Par défaut l'iPhone ignore les alertes des calendriers abonnés. Pour les garder : <strong>Réglages → Calendrier → Comptes → Calendriers avec abonnement → Ziva</strong>, puis désactive « Supprimer les alarmes ».
             </p>
           </details>
         </>
@@ -96,7 +96,7 @@ export default function CalendarSync({ baseUrl, initialToken }: { baseUrl: strin
               Confirme avec <strong>« Ajouter »</strong>
             </li>
             <li>
-              Dans l'app Google Agenda : <strong>Menu ☰ → Paramètres → Les Indécis</strong> → active <strong>« Synchroniser »</strong>
+              Dans l'app Google Agenda : <strong>Menu ☰ → Paramètres → Ziva</strong> → active <strong>« Synchroniser »</strong>
             </li>
           </ol>
           <details className="details">

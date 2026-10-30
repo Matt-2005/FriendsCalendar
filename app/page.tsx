@@ -12,8 +12,8 @@ export default async function Home() {
         <div className={styles.logo}>
           <img src="/logoCalendrier.png" alt="" />
         </div>
-        <h1 className={styles.title}>Les Indécis</h1>
-        <p className={styles.subtitle}>Les sorties du groupe, enfin organisées. Sans prise de tête.</p>
+        <h1 className={styles.title}>Ziva</h1>
+        <p className={styles.subtitle}>Les sorties de ta bande, enfin calées. Sans prise de tête.</p>
 
         <div className={styles.features}>
           <div className={styles.feature}>

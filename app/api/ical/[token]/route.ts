@@ -35,12 +35,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
   const baseUrl = await getBaseUrl();
   // Un seul groupe : l'agenda porte son nom. Plusieurs : on précise le groupe dans chaque sortie
   const groups = new Map(user.memberships.map((m) => [m.groupId, m.group.name]));
-  const cal = newCalendar(groups.size === 1 ? [...groups.values()][0] : undefined);
+  const cal = newCalendar(groups.size === 1 ? `Ziva · ${[...groups.values()][0]}` : "Ziva");
   for (const e of events) {
     const status = e.rsvps[0]?.status ?? null;
     if (status === "NO") continue; // Les sorties refusées n'encombrent pas l'agenda
     addEvent(cal, e, status, baseUrl, groups.size > 1 ? groups.get(e.groupId) : undefined);
   }
 
-  return icsResponse(cal, "les-indecis.ics");
+  return icsResponse(cal, "ziva.ics");
 }

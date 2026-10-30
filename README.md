@@ -1,6 +1,6 @@
-# Les Indécis Agenda
+# Ziva
 
-Une appli web pensée pour le téléphone qui aide un groupe de potes à s'organiser : proposer une sortie, répondre en un geste (j'y vais / peut-être / pas dispo), dire quand on est libre, et retrouver tout ça dans l'agenda de son téléphone.
+Une appli web pensée pour le téléphone qui aide les groupes (potes, BDE, assos…) à s'organiser : proposer une sortie, répondre en un geste (j'y vais / peut-être / pas dispo), dire quand on est libre, et retrouver tout ça dans l'agenda de son téléphone.
 
 ## Fonctionnalités
 

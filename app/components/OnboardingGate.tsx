@@ -160,7 +160,7 @@ function InstallScreen({ onSkip }: { onSkip: () => void }) {
           <div className={styles.success}>
             <div style={{ fontSize: 40 }}>🎉</div>
             <strong>C'est installé !</strong>
-            <p>Ferme cette page et ouvre <strong>Les Indécis</strong> depuis ton écran d'accueil.</p>
+            <p>Ferme cette page et ouvre <strong>Ziva</strong> depuis ton écran d'accueil.</p>
           </div>
         ) : inApp ? (
           <div className={styles.card}>
@@ -193,7 +193,7 @@ function InstallScreen({ onSkip }: { onSkip: () => void }) {
                 Touche <strong>Ajouter</strong> en haut à droite
               </li>
               <li>
-                Ouvre <strong>Les Indécis</strong> depuis ton écran d'accueil
+                Ouvre <strong>Ziva</strong> depuis ton écran d'accueil
                 <span className={styles.sub}>Tu devras te reconnecter une fois dans l'app, c'est normal.</span>
               </li>
             </ol>
@@ -213,7 +213,7 @@ function InstallScreen({ onSkip }: { onSkip: () => void }) {
                   Choisis <strong>« Installer l'application »</strong> ou <strong>« Ajouter à l'écran d'accueil »</strong>
                 </li>
                 <li>
-                  Ouvre <strong>Les Indécis</strong> depuis ton écran d'accueil
+                  Ouvre <strong>Ziva</strong> depuis ton écran d'accueil
                 </li>
               </ol>
             )}
@@ -306,7 +306,7 @@ function NotifScreen({ initial, onDone, onSkip }: { initial: PushState; onDone: 
                 <>
                   <li>Ouvre les <strong>Réglages</strong> de l'iPhone</li>
                   <li>
-                    <strong>Notifications</strong> → <strong>Les Indécis</strong>
+                    <strong>Notifications</strong> → <strong>Ziva</strong>
                   </li>
                   <li>
                     Active <strong>« Autoriser les notifications »</strong>
@@ -314,7 +314,7 @@ function NotifScreen({ initial, onDone, onSkip }: { initial: PushState; onDone: 
                 </>
               ) : (
                 <>
-                  <li>Appui long sur l'icône <strong>Les Indécis</strong> → <strong>Infos sur l'appli</strong></li>
+                  <li>Appui long sur l'icône <strong>Ziva</strong> → <strong>Infos sur l'appli</strong></li>
                   <li>
                     <strong>Notifications</strong> → active-les
                   </li>

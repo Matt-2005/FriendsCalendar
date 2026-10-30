@@ -19,7 +19,7 @@ function IosInstallSteps() {
         Choisis <strong>« Sur l'écran d'accueil »</strong>
       </li>
       <li>
-        Ouvre l'app <strong>Les Indécis</strong> depuis ton écran d'accueil et reviens ici
+        Ouvre l'app <strong>Ziva</strong> depuis ton écran d'accueil et reviens ici
       </li>
     </ol>
   );
@@ -151,7 +151,7 @@ export default function NotificationsCard({ variant = "banner" }: { variant?: "b
         <div className="alert alert-info">
           Les notifications sont bloquées.{" "}
           {isIOS()
-            ? "Va dans Réglages → Notifications → Les Indécis, et active « Autoriser les notifications »."
+            ? "Va dans Réglages → Notifications → Ziva, et active « Autoriser les notifications »."
             : "Appuie sur le cadenas à côté de l'adresse du site, puis autorise les notifications."}
         </div>
       )}

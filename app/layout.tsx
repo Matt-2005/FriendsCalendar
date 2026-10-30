@@ -8,10 +8,10 @@ import { currentSeason, DECO_COOKIE } from "@/lib/season";
 import { usingLocalDb } from "@/lib/authOptions";
 
 export const metadata: Metadata = {
-  title: { default: "Les Indécis Agenda", template: "%s · Les Indécis" },
-  description: "Les sorties et les dispos du groupe, au même endroit.",
-  applicationName: "Les Indécis",
-  appleWebApp: { capable: true, title: "Les Indécis", statusBarStyle: "default" },
+  title: { default: "Ziva", template: "%s · Ziva" },
+  description: "Les sorties et les dispos de ta bande, au même endroit.",
+  applicationName: "Ziva",
+  appleWebApp: { capable: true, title: "Ziva", statusBarStyle: "default" },
   icons: { icon: "/icon-192.png", apple: "/apple-touch-icon.png" },
   formatDetection: { telephone: false },
 };

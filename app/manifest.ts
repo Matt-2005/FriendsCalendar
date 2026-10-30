@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Les Indécis Agenda",
-    short_name: "Les Indécis",
-    description: "Les sorties et les dispos du groupe, au même endroit.",
+    name: "Ziva",
+    short_name: "Ziva",
+    description: "Les sorties et les dispos de ta bande, au même endroit.",
     start_url: "/events",
     scope: "/",
     display: "standalone",
